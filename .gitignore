@@ -1,0 +1,23 @@
+# ---- Build output ----
+/.build/
+/build/
+
+# ---- Fetched at setup time (NOT committed) ----
+# Prebuilt whisper.cpp framework — scripts/fetch-whisper.sh (~184 MB)
+/Vendor/whisper.xcframework/
+/Vendor/*.zip
+# Speech model — scripts/fetch-model.sh (~1.6 GB); lives in Application Support
+*.bin
+
+# ---- Generated at runtime ----
+# ChimeSynth renders its voice-switch cues to disk
+*.wav
+
+# ---- macOS / editor cruft ----
+.DS_Store
+*.swp
+.idea/
+.vscode/
+
+# ---- SwiftPM local state ----
+.swiftpm/

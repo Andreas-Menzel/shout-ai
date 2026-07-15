@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<!-- Shout is deliberately NOT sandboxed: it needs a global CGEvent tap, the
+	     Accessibility API, and Apple-event control of other apps, none of which
+	     the App Sandbox permits. These entitlements only relax the hardened
+	     runtime's default restrictions to the minimum Shout actually uses. -->
+
+	<!-- Under the hardened runtime, sending Apple events to other apps (pausing
+	     Spotify / Apple Music around a dictation) is blocked unless this is set.
+	     Recipients are still subject to the normal TCC Automation consent. -->
+	<key>com.apple.security.automation.apple-events</key>
+	<true/>
+</dict>
+</plist>
