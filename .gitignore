@@ -13,6 +13,12 @@
 # ChimeSynth renders its voice-switch cues to disk
 *.wav
 
+# ---- Documentation media ----
+# Heavy ProRes/QuickTime editing masters — regenerable via
+# scripts/render-recording.sh. Only the light web assets (.apng/.webm/.png)
+# are committed.
+/docs/recordings/*.mov
+
 # ---- macOS / editor cruft ----
 .DS_Store
 *.swp

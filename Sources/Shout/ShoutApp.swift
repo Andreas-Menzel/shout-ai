@@ -4,7 +4,18 @@
 import AppKit
 import SwiftUI
 
+/// Program entry point. Diverts to the off-screen screenshot renderer when
+/// `SHOUT_RENDER_DIR` is set (documentation tooling), otherwise launches the
+/// normal menu-bar app.
 @main
+enum ShoutMain {
+    static func main() {
+        let handled = MainActor.assumeIsolated { ScreenshotRenderer.runIfRequested() }
+        if handled { return }
+        ShoutApp.main()
+    }
+}
+
 struct ShoutApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) private var delegate
 

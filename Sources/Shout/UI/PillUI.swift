@@ -315,8 +315,12 @@ struct PillContent: View {
             recordingStatus(locked: locked)
         case .transcribing:
             profileChip
-            ProgressView()
-                .controlSize(.small)
+            if let angle = app.previewSpinnerAngle {
+                renderSpinner(angle: angle) // off-screen render: ProgressView can't animate
+            } else {
+                ProgressView()
+                    .controlSize(.small)
+            }
             latchedProfileBadge
             statusText("Transcribing…", previewMaxWidth: Self.previewWidth)
         case .rewriting:
@@ -440,12 +444,34 @@ struct PillContent: View {
         }
     }
 
+    /// A hand-drawn stand-in for the system spinner, used only by off-screen
+    /// renders (which supply `previewSpinnerAngle`). Eight tapered spokes with a
+    /// fading trail, rotated as a whole — matches the small `ProgressView` on
+    /// the dark pill closely enough for documentation clips.
+    private func renderSpinner(angle: Double) -> some View {
+        ZStack {
+            ForEach(0 ..< 8, id: \.self) { i in
+                Capsule()
+                    .fill(.white.opacity(0.2 + 0.8 * Double(i) / 8))
+                    .frame(width: 2, height: 4.5)
+                    .offset(y: -5)
+                    .rotationEffect(.degrees(Double(i) / 8 * 360))
+            }
+        }
+        .frame(width: 15, height: 15)
+        .rotationEffect(.degrees(angle))
+    }
+
     private var waveform: some View {
-        HStack(spacing: 2.5) {
-            ForEach(levels.indices, id: \.self) { index in
+        // Off-screen renders supply a fixed waveform (the live meter's audio
+        // callbacks never fire during rasterisation); nil falls back to the
+        // live rolling buffer.
+        let bars = app.previewWaveform ?? levels
+        return HStack(spacing: 2.5) {
+            ForEach(bars.indices, id: \.self) { index in
                 Capsule()
                     .fill(Color.white.opacity(0.9))
-                    .frame(width: 3, height: 5 + CGFloat(min(levels[index], 1)) * 24)
+                    .frame(width: 3, height: 5 + CGFloat(min(bars[index], 1)) * 24)
             }
         }
         .animation(reduceMotion ? nil : .linear(duration: 0.08), value: levels)

@@ -46,6 +46,10 @@ final class AppState {
 
     var phase: Phase = .idle {
         didSet {
+            // Off-screen documentation renders drive `phase` directly to pose the
+            // pill; the live floating panel and media-pause control must stay
+            // dormant there (no window server, no Spotify/Music side-effects).
+            guard !isRenderingPreview else { return }
             syncPill()
             // Media pause/resume hangs off the recording edge: every way a take
             // starts or ends (finish, cancel, max-length watchdog) crosses it,
@@ -60,6 +64,21 @@ final class AppState {
         }
     }
     var audioLevel: Float = 0
+
+    // MARK: - Screenshot rendering (off-screen documentation only)
+    /// When true, `phase` changes skip the live floating panel and media-pause
+    /// side-effects so the pill views can be rasterised head­lessly. Never set
+    /// in normal operation.
+    @ObservationIgnored var isRenderingPreview = false
+    /// A fixed waveform for off-screen renders. The live meter is fed by audio
+    /// callbacks that never fire during rasterisation, so the pill would show a
+    /// flat bar otherwise; `nil` in normal operation (the live meter is used).
+    @ObservationIgnored var previewWaveform: [Float]?
+    /// Drives the transcribing spinner's rotation per frame for off-screen
+    /// renders (the system `ProgressView` can't animate under `ImageRenderer`);
+    /// `nil` in normal operation (the real spinner is used).
+    @ObservationIgnored var previewSpinnerAngle: Double?
+
     var fnMonitorActive = false
     /// User-toggled pause: tears down the fn listener so the key is free for
     /// other uses (gaming, screen-sharing), without quitting Shout.
