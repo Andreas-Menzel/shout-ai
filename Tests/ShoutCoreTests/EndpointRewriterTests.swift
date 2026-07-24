@@ -8,9 +8,11 @@ import XCTest
 /// path can be exercised without a live server.
 private final class StubURLProtocol: URLProtocol {
     struct Stub { let status: Int; let body: Data }
-    static var stub: Stub?
-    static var lastURL: URL?
-    static var lastRequestBody: Data?
+    // Test-stub state: set before a request and read after the awaited round-trip
+    // completes, so access is serialised across the URLSession protocol queue.
+    nonisolated(unsafe) static var stub: Stub?
+    nonisolated(unsafe) static var lastURL: URL?
+    nonisolated(unsafe) static var lastRequestBody: Data?
 
     override class func canInit(with request: URLRequest) -> Bool { true }
     override class func canonicalRequest(for request: URLRequest) -> URLRequest { request }
@@ -177,7 +179,7 @@ final class EndpointRewriterTests: XCTestCase {
     }
 
     func testStreamAssemblerEmptyDoneOnlyOrThinkOnlyIsNil() {
-        var empty = EndpointRewriter.StreamAssembler()
+        let empty = EndpointRewriter.StreamAssembler()
         XCTAssertNil(empty.content)
         var doneOnly = EndpointRewriter.StreamAssembler()
         XCTAssertTrue(doneOnly.consume("data: [DONE]"))

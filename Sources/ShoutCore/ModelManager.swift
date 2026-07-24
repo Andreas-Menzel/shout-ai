@@ -113,7 +113,11 @@ public final class ModelManager {
     }
 }
 
-private final class DownloadDelegate: NSObject, URLSessionDownloadDelegate {
+// URLSession requires a Sendable delegate. Every callback is delivered on
+// `delegateQueue: .main` (see startDownload), so the stored closures — which
+// hop back into the main-actor ModelManager — are only ever touched on the
+// main thread. That invariant is what makes the unchecked conformance safe.
+private final class DownloadDelegate: NSObject, URLSessionDownloadDelegate, @unchecked Sendable {
     let destination: URL
     let minBytes: Int64
     let sha256: String?

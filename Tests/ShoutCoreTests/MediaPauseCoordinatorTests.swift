@@ -123,19 +123,18 @@ private final class FakeMediaControl: MediaPlayerControl, @unchecked Sendable {
 
     func waitUntilPauseHeld() async {
         while true {
-            lock.lock()
-            let held = _pauseGate != nil
-            lock.unlock()
+            let held = lock.withLock { _pauseGate != nil }
             if held { return }
             try? await Task.sleep(nanoseconds: 5_000_000)
         }
     }
 
     func pauseActivePlayers() async -> [MediaPlayer] {
-        lock.lock()
-        let shouldHold = _holdPause
-        _holdPause = false
-        lock.unlock()
+        let shouldHold = lock.withLock { () -> Bool in
+            let hold = _holdPause
+            _holdPause = false
+            return hold
+        }
         if shouldHold {
             await withCheckedContinuation { continuation in
                 lock.lock()
@@ -143,17 +142,13 @@ private final class FakeMediaControl: MediaPlayerControl, @unchecked Sendable {
                 lock.unlock()
             }
         }
-        lock.lock()
-        _log.append("pause")
-        lock.unlock()
+        lock.withLock { _log.append("pause") }
         return playing
     }
 
     func resume(_ players: [MediaPlayer]) async {
         let delay = resumeDelayNanos
         if delay > 0 { try? await Task.sleep(nanoseconds: delay) }
-        lock.lock()
-        _log.append("resume(" + players.map(\.name).joined(separator: "+") + ")")
-        lock.unlock()
+        lock.withLock { _log.append("resume(" + players.map(\.name).joined(separator: "+") + ")") }
     }
 }

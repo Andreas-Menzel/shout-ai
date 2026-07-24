@@ -11,7 +11,7 @@ import ShoutCore
 final class FnKeyMonitor {
     typealias Event = FnEvent
 
-    var handler: ((Event) -> Void)?
+    var handler: (@MainActor @Sendable (Event) -> Void)?
     private(set) var isFnDown = false
 
     private var tap: CFMachPort?
@@ -124,9 +124,10 @@ final class FnKeyMonitor {
     }
 
     private func emit(_ event: Event) {
-        // The tap runs on the main run loop; dispatch keeps handler work off the tap callback.
-        DispatchQueue.main.async { [weak self] in
-            self?.handler?(event)
-        }
+        // The tap runs on the main run loop; dispatch keeps handler work off the
+        // tap callback. Capture the handler (not self) so the Sendable dispatch
+        // closure carries only Sendable state; deliver on the main actor.
+        let handler = self.handler
+        DispatchQueue.main.async { MainActor.assumeIsolated { handler?(event) } }
     }
 }

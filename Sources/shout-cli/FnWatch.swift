@@ -14,6 +14,10 @@ import ShoutCore
 /// which is Apple-signed), so it never disturbs the Shout app or its permissions.
 ///
 ///   shout-cli fnwatch [seconds]
+///
+/// Entirely main-actor work: the tap and every timer fire on the main run loop
+/// (`CFRunLoopRun`), so the mutable diagnostic state below is isolated there.
+@MainActor
 enum FnWatch {
     private static let fnKeyCode: Int64 = 63
     private static let globeKeyDownCode: Int64 = 179
@@ -47,7 +51,10 @@ enum FnWatch {
         guard let tap = CGEvent.tapCreate(
             tap: .cgSessionEventTap, place: .headInsertEventTap, options: .listenOnly,
             eventsOfInterest: mask, callback: { _, type, event, _ in
-                FnWatch.handle(type: type, event: event)
+                // @convention(c): can't inherit isolation. The tap fires on the
+                // main run loop (CFRunLoopRun below), so the main-actor handler
+                // is reached safely.
+                MainActor.assumeIsolated { FnWatch.handle(type: type, event: event) }
                 return Unmanaged.passUnretained(event)
             }, userInfo: nil
         ) else {
@@ -63,10 +70,13 @@ enum FnWatch {
         startTime = CFAbsoluteTimeGetCurrent()
         lastEventAt = startTime
         Timer.scheduledTimer(withTimeInterval: seconds, repeats: false) { _ in
-            emit("")
-            emit("=== fnwatch done ===")
-            FnWatch.logHandle?.closeFile()
-            exit(0)
+            // Fires on the main run loop.
+            MainActor.assumeIsolated {
+                emit("")
+                emit("=== fnwatch done ===")
+                FnWatch.logHandle?.closeFile()
+                exit(0)
+            }
         }
         CFRunLoopRun()
     }
@@ -123,7 +133,8 @@ enum FnWatch {
             case .armDoubleTap:
                 note("→ short tap: awaiting 2nd tap for \(config.doubleTapWindow)s")
                 let timer = Timer(timeInterval: config.doubleTapWindow, repeats: false) { _ in
-                    apply(recognizer.doubleTapTimedOut())
+                    // Fires on the main run loop.
+                    MainActor.assumeIsolated { apply(recognizer.doubleTapTimedOut()) }
                 }
                 RunLoop.current.add(timer, forMode: .common)
             case .disarmDoubleTap:

@@ -12,5 +12,15 @@
 	     Recipients are still subject to the normal TCC Automation consent. -->
 	<key>com.apple.security.automation.apple-events</key>
 	<true/>
+
+	<!-- The hardened runtime enforces Library Validation: it refuses to load any
+	     framework not signed by the SAME Team ID as the app (or by Apple). The
+	     bundled whisper.framework is signed with our self-signed "Shout Dev
+	     Signing" cert, which carries no Team ID, so validation has nothing to
+	     match on and dyld aborts at launch ("Library not loaded ... different
+	     Team IDs"). This opts out of that check so the app can load its own
+	     embedded framework. Notarization-safe. -->
+	<key>com.apple.security.cs.disable-library-validation</key>
+	<true/>
 </dict>
 </plist>

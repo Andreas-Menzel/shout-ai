@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Copyright (C) 2026 Andreas Menzel
 
-import AVFoundation
+@preconcurrency import AVFoundation
 import Foundation
 
 /// Captures microphone audio and accumulates it as 16 kHz mono Float32 samples
@@ -14,8 +14,8 @@ public final class AudioRecorder {
     private let lock = NSLock()
     public private(set) var isRecording = false
 
-    /// Called on the main queue with a 0...1 input level, roughly 10–25×/second.
-    public var onLevel: ((Float) -> Void)?
+    /// Called on the main actor with a 0...1 input level, roughly 10–25×/second.
+    public var onLevel: (@MainActor @Sendable (Float) -> Void)?
 
     public init() {}
 
@@ -86,7 +86,7 @@ public final class AudioRecorder {
         let capacity = AVAudioFrameCount(Double(buffer.frameLength) * ratio) + 1024
         guard let out = AVAudioPCMBuffer(pcmFormat: converter.outputFormat, frameCapacity: capacity) else { return }
 
-        var consumed = false
+        nonisolated(unsafe) var consumed = false
         var error: NSError?
         let status = converter.convert(to: out, error: &error) { _, outStatus in
             if consumed {
@@ -108,6 +108,9 @@ public final class AudioRecorder {
         for v in chunk { sum += v * v }
         let rms = (sum / Float(max(chunk.count, 1))).squareRoot()
         let level = min(1, rms * Tuning.audioLevelGain)
-        DispatchQueue.main.async { [weak self] in self?.onLevel?(level) }
+        // Deliver on the main actor. Capture the callback (not self) so the
+        // Sendable dispatch closure carries only value/Sendable state.
+        let deliver = onLevel
+        DispatchQueue.main.async { MainActor.assumeIsolated { deliver?(level) } }
     }
 }

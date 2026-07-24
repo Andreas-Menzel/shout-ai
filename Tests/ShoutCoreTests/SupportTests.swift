@@ -37,11 +37,15 @@ final class SupportTests: XCTestCase {
     /// deadline rather than waiting for the operation to finish.
     func testWithTimeoutIsHardEvenIfOperationIgnoresCancellation() async {
         let start = DispatchTime.now()
+        // Uncooperative work: blocks its thread and never checks cancellation.
+        // Kept in a synchronous closure so the (noasync) Thread.sleep isn't
+        // invoked directly inside the async operation.
+        let blockIgnoringCancellation: @Sendable () -> Int = {
+            Thread.sleep(forTimeInterval: 1.0)
+            return 1
+        }
         do {
-            _ = try await withTimeout(seconds: 0.2) { () -> Int in
-                Thread.sleep(forTimeInterval: 1.0)   // uncooperative: ignores cancellation
-                return 1
-            }
+            _ = try await withTimeout(seconds: 0.2) { blockIgnoringCancellation() }
             XCTFail("expected timeout")
         } catch ShoutError.timeout {
             let elapsed = Double(DispatchTime.now().uptimeNanoseconds - start.uptimeNanoseconds) / 1e9

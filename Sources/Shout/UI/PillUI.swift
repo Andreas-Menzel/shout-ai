@@ -66,7 +66,10 @@ final class PillController {
             context.duration = 0.25
             panel.animator().alphaValue = 0
         }, completionHandler: { [panel] in
-            if panel.alphaValue == 0 { panel.orderOut(nil) }
+            // Delivered on the main thread by NSAnimationContext.
+            MainActor.assumeIsolated {
+                if panel.alphaValue == 0 { panel.orderOut(nil) }
+            }
         })
     }
 

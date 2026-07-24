@@ -63,7 +63,10 @@ final class PermissionsManager {
     }
 
     func requestAccessibility() {
-        let options = [kAXTrustedCheckOptionPrompt.takeUnretainedValue() as String: true] as CFDictionary
+        // Literal key instead of `kAXTrustedCheckOptionPrompt`: the imported C
+        // global is not concurrency-safe under Swift 6. "AXTrustedCheckOptionPrompt"
+        // is that constant's stable, documented value.
+        let options = ["AXTrustedCheckOptionPrompt": true] as CFDictionary
         _ = AXIsProcessTrustedWithOptions(options)
         _ = CGRequestPostEventAccess()
     }

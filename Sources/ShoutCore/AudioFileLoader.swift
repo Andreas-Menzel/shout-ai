@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Copyright (C) 2026 Andreas Menzel
 
-import AVFoundation
+@preconcurrency import AVFoundation
 import Foundation
 
 /// Loads any audio file AVFoundation can read and converts it to 16 kHz mono
@@ -38,7 +38,7 @@ public enum AudioFileLoader {
             throw ShoutError.audioFileUnreadable(url.path)
         }
 
-        var fed = false
+        nonisolated(unsafe) var fed = false
         var error: NSError?
         let status = converter.convert(to: outBuffer, error: &error) { _, outStatus in
             if fed {

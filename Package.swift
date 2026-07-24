@@ -12,7 +12,7 @@ let package = Package(
         .target(
             name: "ShoutCore",
             dependencies: ["whisper"],
-            swiftSettings: [.swiftLanguageMode(.v5)],
+            swiftSettings: [.swiftLanguageMode(.v6)],
             linkerSettings: [
                 .linkedFramework("Accelerate"),
                 .linkedFramework("Metal"),
@@ -27,21 +27,21 @@ let package = Package(
         .executableTarget(
             name: "Shout",
             dependencies: ["ShoutCore"],
-            swiftSettings: [.swiftLanguageMode(.v5)]
+            swiftSettings: [.swiftLanguageMode(.v6)]
         ),
 
         // Headless test harness: transcribe/rewrite from the command line.
         .executableTarget(
             name: "shout-cli",
             dependencies: ["ShoutCore"],
-            swiftSettings: [.swiftLanguageMode(.v5)]
+            swiftSettings: [.swiftLanguageMode(.v6)]
         ),
 
         // Unit tests for the engine layer's pure logic.
         .testTarget(
             name: "ShoutCoreTests",
             dependencies: ["ShoutCore"],
-            swiftSettings: [.swiftLanguageMode(.v5)]
+            swiftSettings: [.swiftLanguageMode(.v6)]
         ),
     ]
 )
