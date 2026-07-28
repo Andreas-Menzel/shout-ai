@@ -28,14 +28,19 @@ jobs:
           xcodebuild -version
           swift --version
 
-      # SwiftPM fetches the whisper.cpp xcframework (~184 MB) from the
-      # binaryTarget in Package.swift and verifies its SHA-256. Cache it so the
-      # download happens once per manifest change rather than once per run.
-      - name: Cache whisper.xcframework
+      # SwiftPM fetches the whisper.cpp xcframework from the binaryTarget in
+      # Package.swift (a 50 MB zip that unpacks to ~184 MB) and verifies its
+      # SHA-256. Cache the download so it happens once per manifest change
+      # rather than once per run. This has to be SwiftPM's own artifact cache:
+      # .build/artifacts holds the unpacked framework, but SwiftPM decides
+      # whether to download from the cache below, so caching .build/artifacts
+      # alone re-downloads every run. Keyed on Package.swift, which carries both
+      # the URL and the checksum.
+      - name: Cache SwiftPM binary artifacts
         uses: actions/cache@v4
         with:
-          path: .build/artifacts
-          key: whisper-artifacts-${{ runner.os }}-${{ hashFiles('Package.swift') }}
+          path: ~/Library/Caches/org.swift.swiftpm
+          key: swiftpm-artifacts-${{ runner.os }}-${{ hashFiles('Package.swift') }}
 
       - name: Build (debug)
         run: swift build --build-tests
@@ -59,12 +64,14 @@ jobs:
       # Smoke-tests the docs tooling: it renders real SwiftUI views off-screen via
       # ImageRenderer, so it catches UI changes that would silently break it.
       # Headless — no window server needed. Rendered to a temp dir so the tracked
-      # docs/screenshots/ stay untouched, and timed out so a hung GUI process
-      # can't eat the whole job.
+      # docs/screenshots/ stay untouched. The step is time-boxed by Actions
+      # itself, not by timeout(1) — macOS ships no such binary and the runner
+      # image carries no coreutils, so a `timeout` prefix would exit 127.
       - name: Render documentation screenshots (smoke test)
+        timeout-minutes: 5
         run: |
           out="$(mktemp -d)"
-          timeout 300 scripts/render-screenshots.sh "$out"
+          scripts/render-screenshots.sh "$out"
           ls -l "$out"
 
       - uses: actions/upload-artifact@v4
