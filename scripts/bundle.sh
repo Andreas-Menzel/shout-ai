@@ -1,4 +1,6 @@
 #!/bin/bash
+# SPDX-License-Identifier: GPL-3.0-or-later
+# Copyright (C) 2026 Andreas Menzel
 # Builds the release binary and assembles a signed Shout.app in build/.
 set -euo pipefail
 cd "$(dirname "$0")/.."

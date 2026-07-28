@@ -1,4 +1,6 @@
 #!/usr/bin/env bash
+# SPDX-License-Identifier: GPL-3.0-or-later
+# Copyright (C) 2026 Andreas Menzel
 # Render documentation screenshots of the floating pill / notch island UI.
 #
 # No display is required: SwiftUI's ImageRenderer rasterises the real pill views

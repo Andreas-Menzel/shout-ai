@@ -48,6 +48,17 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ```
 
+The prebuilt framework additionally contains MIT-licensed contributions that
+carry their own in-file notices, and therefore travel with any binary copy:
+
+- Copyright (c) 2024 Mozilla Foundation — the llamafile `sgemm` matrix-multiply
+  path.
+- Copyright (c) 2023 Jeffrey Quesnelle and Bowen Peng — the YaRN RoPE scaling
+  implementation in ggml.
+
+Both notices appear in the corresponding upstream sources at whisper.cpp tag
+`v1.9.1`.
+
 ---
 
 ## Whisper speech model (OpenAI)
@@ -87,11 +98,13 @@ SOFTWARE.
 
 ## Apple system frameworks
 
-Shout links against Apple's system frameworks — AVFoundation, Accelerate,
-Metal, MetalKit, Core ML, AppKit, SwiftUI, and the Foundation Models framework
-that powers the optional Apple Intelligence cleanup pass. These ship as part of
-macOS and are used under Apple's SDK license terms; they are not redistributed
-with Shout.
+Shout links against Apple's system frameworks — including AVFoundation,
+Accelerate, Metal, MetalKit, Core ML, AppKit, SwiftUI, Security,
+ServiceManagement, CryptoKit, ApplicationServices, Core Graphics, and the
+Foundation Models framework that powers the optional Apple Intelligence cleanup
+pass — and against the platform C++ runtime (`libc++`). All of these ship as
+part of macOS and are used under Apple's SDK license terms; none are
+redistributed with Shout.
 
 ---
 

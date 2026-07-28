@@ -2,11 +2,12 @@
 
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](LICENSE)
 
-Local-first dictation for macOS — a Wispr-Flow-style tool where everything runs on your Mac.
-Hold the **fn** key, speak German or English into any text field, release — and fluent,
-cleaned-up text is inserted where your cursor is. **Everything runs on your Mac by default —
-your audio never leaves the device, and your text stays on it too unless you deliberately
-connect a remote cleanup model.**
+Local-first, push-to-talk dictation for macOS. Hold the **fn** key, speak German or English into
+any text field, release — and fluent, cleaned-up text is inserted where your cursor is.
+**Everything runs on your Mac by default — your audio never leaves the device, and your text
+stays on it too unless you deliberately connect a remote cleanup model.**
+
+Dictation supports German and English; the interface is English.
 
 > **Status:** developer build. Shout is currently built from source (there is no notarized
 > download yet), so setup assumes Xcode and the command line.
@@ -18,10 +19,26 @@ on-device with whisper.cpp, cleans it up with Apple Intelligence (removing "ähm
 starts, and fixing grammar), and pastes the result into whatever app you're in. If Apple
 Intelligence is off or unsure, it inserts the raw transcript instead — dictation never blocks.
 
+<p align="center">
+  <img src="docs/recordings/pill-classic-workflow.apng"
+       alt="Holding fn to record, then the pill moving through transcribing, polishing, and inserted"
+       width="380">
+</p>
+
+A floating pill reports each stage — listening, transcribing, polishing, inserted — in a classic
+capsule or as a Dynamic Island notch:
+
+<p align="center">
+  <img src="docs/screenshots/pill-classic-recording.png" alt="Classic pill while recording" width="300">
+  <img src="docs/screenshots/pill-notch-recording.png" alt="Notch pill while recording" width="300">
+</p>
+
 ## Requirements
 
 - **macOS 26 or later**, on **Apple Silicon**
-- **Xcode 26+** and its command-line tools (to build from source)
+- **Xcode 26 or later** — the full Xcode, not just the Command Line Tools. Shout uses the
+  `FoundationModels` framework, so the macOS 26 SDK is required to compile at all. Point
+  `xcode-select -p` at it.
 - **~2.5 GB free disk** — the speech model (~1.6 GB), the whisper framework (~184 MB), and build
   output
 - **Apple Intelligence** enabled — *optional*, only for the cleanup pass; transcription works without it
@@ -69,9 +86,9 @@ You can reopen it anytime from the menu bar (**Setup Assistant…**).
 
 ## Using Shout
 
-Shout is a menu-bar app (a mic icon near the clock). Click it for status and actions:
-Start/Finish dictation, **Pause Shout** (frees the fn key for other apps without quitting),
-History…, Setup Assistant…, Settings…, and Quit.
+Shout is a menu-bar app (a mic icon near the clock). Click it for the active **profile** and a
+switcher, plus status and actions: Start/Finish dictation, **Pause Shout** (frees the fn key for
+other apps without quitting), History…, Setup Assistant…, Settings…, and Quit.
 
 **Dictating:**
 
@@ -81,13 +98,49 @@ History…, Setup Assistant…, Settings…, and Quit.
 - Dictations under 4 words (configurable) skip the cleanup pass and insert the raw transcript.
 - A floating **pill** shows the current state (listening / transcribing / polishing / inserted).
   "Inserted raw" means the cleanup was skipped or fell back, so you may want to proofread.
+- If Spotify or Apple Music is playing, Shout pauses it while you speak and resumes afterwards
+  (*Settings ▸ Dictation ▸ While dictating*, on by default).
+
+### Profiles
+
+A profile decides *what* Shout does with your words after transcribing them. Five ship with the
+app, and the active one is shown (and switchable) at the top of the menu bar:
+
+| Profile | What it does |
+|---|---|
+| **Clean-up** | The default. Removes fillers and revoked false starts, fixes grammar and punctuation, keeps everything else. |
+| **Professional writing** | Rewrites the same content in a polished register, inventing nothing. |
+| **Prompt engineer** | Turns a spoken request into a structured prompt for an AI assistant — without answering it. |
+| **Summarize** | Plain-text `- ` bullets, keeping who does what exactly as spoken. |
+| **Translate → English** | Natural English; already-English input is only cleaned, not rephrased. |
+
+Add your own under *Settings ▸ Dictation ▸ Manage profiles…* — duplicate a built-in or start
+fresh, then set its prompt, its cleanup model, and a glyph and tint so you can tell profiles
+apart at a glance. Editing a built-in is fine; Shout only replaces a built-in's prompt on upgrade
+if you never touched it.
+
+<p align="center">
+  <img src="docs/screenshots/pill-notch-profile-list.png" alt="The profile list on the notch pill" width="300">
+</p>
+
+### Switching profiles by voice
+
+Off by default. Turn on *Settings ▸ Dictation ▸ Switch profile by voice* and you can start a
+dictation with a trigger phrase — "**use profile** summarize, …" or "**use profile** two, …" —
+and the rest of the dictation runs through that profile. The pill shows the profile name the
+moment it recognizes it, and a soft tick confirms it: whatever the pill shows when you stop
+recording is exactly what runs. Misheard? Say the name or number again, or say a cancel word
+("cancel", "abbrechen") to keep going with the current profile. The trigger phrase, cancel words,
+and whether the switch sticks for later dictations are all configurable.
 
 **Settings** (from the menu bar):
 
 - *General* — launch at login, show/style the pill (Classic capsule or Dynamic Island notch),
-  live transcript preview, restore clipboard after inserting, and **Save dictation history**.
-- *Dictation* — spoken language (auto / German / English), the fn hold threshold and
-  double-tap window, and the cleanup toggle with its minimum-word count.
+  live transcript preview, and **Save dictation history**.
+- *Dictation* — spoken language (auto / German / English), the fn hold threshold and double-tap
+  window, the cleanup toggle with its minimum-word count, the active profile and its model
+  (*Manage profiles…* / *Manage endpoints…*), restore clipboard after inserting, pause media
+  while dictating, and voice profile switching.
 - *Glossary* — names and jargon Shout should spell exactly (e.g. product or people names).
 - *Setup* — the permission checklist, available any time.
 

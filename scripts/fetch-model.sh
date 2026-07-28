@@ -1,4 +1,6 @@
 #!/bin/bash
+# SPDX-License-Identifier: GPL-3.0-or-later
+# Copyright (C) 2026 Andreas Menzel
 # Pre-downloads the Whisper model to Application Support (the app can also
 # download it itself from the Setup window).
 set -euo pipefail
@@ -16,7 +18,7 @@ else
     # -f fails loudly on an HTTP error instead of saving an error page as the model;
     # force HTTPS/TLS so the download can't be silently downgraded.
     curl -fL -C - --proto '=https' --tlsv1.2 --create-dirs -o "$DEST" \
-        "https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-large-v3-turbo.bin"
+        "https://huggingface.co/ggerganov/whisper.cpp/resolve/5359861c739e955e79d9a303bcbc70fb988958b1/ggml-large-v3-turbo.bin"
 fi
 
 # Integrity pin: verify the SHA-256 before trusting the file — on every run, not

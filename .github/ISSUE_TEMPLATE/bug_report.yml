@@ -1,0 +1,88 @@
+name: Bug report
+description: Something in Shout doesn't work the way it should
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ### ⚠️ Never paste private dictation content
+
+        Shout is local-first, and issues here are public. When you quote a transcript, use a
+        harmless sentence that still reproduces the problem — not something you actually
+        dictated.
+
+        For **security** problems, don't use this form: see
+        [SECURITY.md](https://github.com/Andreas-Menzel/shout-ai/blob/main/.github/SECURITY.md).
+
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened
+      description: What you expected, and what happened instead.
+    validations:
+      required: true
+
+  - type: textarea
+    id: repro
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Hold fn and say "…"
+        2. Release
+        3. …
+    validations:
+      required: true
+
+  - type: input
+    id: macos
+    attributes:
+      label: macOS version
+      description: Apple menu ▸ About This Mac (e.g. 26.2)
+    validations:
+      required: true
+
+  - type: dropdown
+    id: apple-intelligence
+    attributes:
+      label: Apple Intelligence
+      description: System Settings ▸ Apple Intelligence & Siri
+      options:
+        - "Enabled"
+        - "Disabled"
+        - "Not sure"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: rewrite-model
+    attributes:
+      label: Which cleanup model was selected?
+      options:
+        - "On-device (Apple Intelligence) — the default"
+        - "A local endpoint (Ollama, LM Studio, …)"
+        - "A remote endpoint"
+        - "Cleanup turned off"
+        - "Not sure"
+    validations:
+      required: true
+
+  - type: input
+    id: profile
+    attributes:
+      label: Active profile
+      description: e.g. Clean-up, Summarize, or the name of your own profile
+
+  - type: input
+    id: signing
+    attributes:
+      label: How did you sign the build?
+      description: '`make cert`, an Apple Development certificate, or ad-hoc (no cert)'
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant log output
+      description: |
+        `log stream --predicate 'subsystem == "com.shoutai.Shout"'` — reproduce while it runs.
+        Transcript text is marked private and will show as `<private>`; keep it that way.
+      render: text

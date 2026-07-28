@@ -1,0 +1,84 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-test:
+    name: Build & test
+    # macOS 26 (arm64) is required, not preferred: Sources/ShoutCore/
+    # AppleFoundationRewriter.swift imports FoundationModels unguarded, and
+    # Package.swift declares .macOS("26.0"), so an older SDK compiles nothing.
+    runs-on: macos-26
+    timeout-minutes: 30
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Toolchain versions
+        run: |
+          sw_vers
+          xcodebuild -version
+          swift --version
+
+      # SwiftPM fetches the whisper.cpp xcframework (~184 MB) from the
+      # binaryTarget in Package.swift and verifies its SHA-256. Cache it so the
+      # download happens once per manifest change rather than once per run.
+      - name: Cache whisper.xcframework
+        uses: actions/cache@v4
+        with:
+          path: .build/artifacts
+          key: whisper-artifacts-${{ runner.os }}-${{ hashFiles('Package.swift') }}
+
+      - name: Build (debug)
+        run: swift build --build-tests
+
+      - name: Test
+        run: swift test
+
+      # Release too: Swift 6 strict concurrency can surface in optimized builds
+      # that debug lets through.
+      - name: Build (release)
+        run: swift build -c release
+
+      # Exercises the real packaging path — framework embedding, rpath, license
+      # copying, signing. Ad-hoc identity needs no keychain access.
+      - name: Bundle Shout.app (ad-hoc signed)
+        run: CODESIGN_IDENTITY=- scripts/bundle.sh
+
+      - name: Verify signature
+        run: codesign --verify --strict --verbose=2 build/Shout.app
+
+      # Smoke-tests the docs tooling: it renders real SwiftUI views off-screen via
+      # ImageRenderer, so it catches UI changes that would silently break it.
+      # Headless — no window server needed. Rendered to a temp dir so the tracked
+      # docs/screenshots/ stay untouched, and timed out so a hung GUI process
+      # can't eat the whole job.
+      - name: Render documentation screenshots (smoke test)
+        run: |
+          out="$(mktemp -d)"
+          timeout 300 scripts/render-screenshots.sh "$out"
+          ls -l "$out"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Shout-adhoc
+          path: build/Shout.app
+          retention-days: 14
+
+# Deliberately NOT run here — these need hardware or entitlements no hosted
+# runner has, and pretending otherwise would give a false green:
+#   * scripts/prompt-eval.sh and any shout-cli rewrite/pipeline command —
+#     Apple Intelligence is unavailable on GitHub runners.
+#   * The 1.6 GB speech model (scripts/fetch-model.sh) — no test needs it, and
+#     downloading it would dominate the run.
+#   * Microphone / Input Monitoring / Accessibility, real CGEventTaps, and text
+#     insertion — all require TCC grants.
+#   * make cert (interactive login password) and notarization (Apple ID).

@@ -10,7 +10,8 @@ using the app, see the [README](../README.md).
 | Hotkey | `CGEventTap` watching the fn key (listen-only) | in-process |
 | Audio | `AVAudioEngine`, 16 kHz mono, in memory only | on-device |
 | Speech-to-text | whisper.cpp `large-v3-turbo` (Metal), German/English auto-detect | on-device |
-| Cleanup | Apple Foundation Models (Apple Intelligence) | on-device |
+| Cleanup | Apple Foundation Models (Apple Intelligence) — the default | on-device |
+| Cleanup (opt-in) | any OpenAI-compatible endpoint via `EndpointRewriter` | local server, or remote if the user chooses one |
 | Insertion | concealed clipboard + synthetic ⌘V, previous clipboard restored | in-process |
 
 The two AI stages sit behind protocols in `ShoutCore/Engines.swift`:
@@ -79,13 +80,74 @@ Exercise the engines from the command line without the UI:
 
 ```sh
 make cli
-.build/release/shout-cli status                     # model + Apple Intelligence availability
-.build/release/shout-cli transcribe voice.wav       # whisper only (auto language)
-.build/release/shout-cli rewrite "ähm also ich..."  # cleanup only
-.build/release/shout-cli pipeline voice.wav         # both stages, with timings
+CLI=.build/release/shout-cli
+
+$CLI status                                   # model + Apple Intelligence availability
+$CLI transcribe voice.aiff [auto|de|en]       # whisper only
+$CLI rewrite <text> [lang] [profile] [terms]  # cleanup via the on-device model
+$CLI rewrite-endpoint <baseURL> <model> <text> [lang]   # via an OpenAI-compatible endpoint
+$CLI pipeline voice.aiff [lang]               # both stages, with timings
+$CLI voice-switch <transcript> [trigger]      # spoken profile-switch parsing
+$CLI diagnose-profile <taskPrompt> <text> [lang]        # assembled prompt + raw model output
+$CLI fnwatch [seconds]                        # fn-key event trace (see Debugging)
 ```
 
-Generate test audio: `say -v Anna -o test.aiff "Ähm, also eigentlich…"`
+`profile` is one of `cleanup`, `professional`, `prompt`, `summarize`, `translate`.
+`diagnose-profile` takes a **task prompt directly**, not a profile name — paste one from
+`Profile+BuiltIns.swift` (or your own draft) to see exactly what gets sent and what comes back.
+That is the fastest way to understand why a prompt misbehaves.
+
+Generate test audio: `say -v Anna -o voice.aiff "Ähm, also eigentlich…"`
+(`AudioFileLoader` uses `AVAudioFile`, so any format it reads works.)
+
+## Prompt evaluation
+
+The built-in rewrite prompts are validated, not guessed. After any change to
+`Profile+BuiltIns.swift` or `RewriteSupport.swift`:
+
+```sh
+make cli && scripts/prompt-eval.sh
+```
+
+This runs every built-in profile against a fixed panel of German and English dictation cases on
+the real on-device model — including the filler, self-correction, glossary, and prompt-injection
+cases that regress most easily. There is **no automatic scoring**: decoding is greedy, so runs
+are reproducible and the workflow is to keep the previous run's output and diff against it. Judge
+each case by its profile's contract, documented in the script's header comment.
+
+Two rules when you change a built-in's task prompt:
+
+1. **Append the outgoing text to `Profile.previousBuiltInTaskPrompts`.** Seeded profiles live in
+   `UserDefaults`, so a shipped prompt improvement never reaches an existing install by itself.
+   On launch, `upgradeBuiltIns` replaces a stored prompt that still matches a previous shipped
+   version *verbatim* — that is how it distinguishes "never customized" from "user edited it".
+   Skip this and users keep the old prompt forever. `ProfileTests` enforces that no history entry
+   equals a current prompt.
+2. **Re-run the panel.** The prompts carry few-shot examples; a small wording change can shift
+   behaviour on the self-correction cases in particular.
+
+Known model limit (Apple Foundation Models, ≈3B): clause-level self-corrections such as "Dann
+kannst du, nee warte, ich …" may keep the abandoned fragment. That errs toward preserving what
+was said, so it is the safe direction — see case `C3`.
+
+## Documentation media
+
+The screenshots and recordings under `docs/` are generated, not captured — `ScreenshotRenderer`
+rasterises the real pill and notch views through SwiftUI's `ImageRenderer`, so **no display,
+window server, or running app is needed** and nothing from the developer's desktop can leak in.
+
+```sh
+make screenshots     # docs/screenshots/*.png
+make recordings      # docs/recordings/*.apng + *.webm  (needs: brew install ffmpeg)
+```
+
+Both are driven by env vars read at process start (`ShoutApp.swift`), each naming an output
+directory and switching the binary into render mode instead of launching the app:
+`SHOUT_RENDER_DIR` writes the still screenshots, `SHOUT_RENDER_FRAMES` writes an animation frame
+sequence for ffmpeg to stitch. The heavy ProRes masters that
+`render-recording.sh` produces are gitignored — only the light web assets are committed. Note the
+PNG output is not byte-reproducible, so re-rendering always shows a diff even when nothing
+visibly changed.
 
 ## Debugging
 

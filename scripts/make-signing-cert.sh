@@ -1,4 +1,6 @@
 #!/bin/bash
+# SPDX-License-Identifier: GPL-3.0-or-later
+# Copyright (C) 2026 Andreas Menzel
 # Creates a self-signed code-signing identity ("Shout Dev Signing") in your
 # login keychain so every rebuild keeps the SAME signature — and macOS privacy
 # permissions survive rebuilds.

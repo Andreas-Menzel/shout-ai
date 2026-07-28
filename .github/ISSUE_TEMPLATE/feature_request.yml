@@ -1,0 +1,30 @@
+name: Feature request
+description: Suggest an improvement or a new capability
+labels: [enhancement]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: What are you trying to do?
+      description: The situation you're in, not the solution you have in mind.
+    validations:
+      required: true
+
+  - type: textarea
+    id: idea
+    attributes:
+      label: What would you like Shout to do?
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: constraints
+    attributes:
+      label: Does this fit Shout's constraints?
+      description: >
+        Shout is local-first by default: audio never leaves the device, and processing is
+        on-device unless the user deliberately configures a remote endpoint. Features that
+        require sending audio or text off the Mac by default are unlikely to land.
+      options:
+        - label: This works without sending audio off the device
+        - label: This works on-device, or is opt-in if it needs a network service

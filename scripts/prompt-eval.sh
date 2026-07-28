@@ -1,4 +1,6 @@
 #!/bin/zsh
+# SPDX-License-Identifier: GPL-3.0-or-later
+# Copyright (C) 2026 Andreas Menzel
 # Prompt-quality panel for the rewrite stage: runs every built-in profile
 # against German + English dictation cases on the real on-device model via
 # shout-cli, including known tricky filler and self-correction cases.
@@ -18,6 +20,11 @@
 # du, nee warte, ich …") may keep the abandoned fragment — safe direction, see C3.
 set -u
 CLI="$(dirname "$0")/../.build/release/shout-cli"
+
+if [[ ! -x "$CLI" ]]; then
+  print -u2 "error: $CLI not found — run 'make cli' first."
+  exit 1
+fi
 
 run() {
   local id="$1" profile="$2" lang="$3" text="$4" gloss="${5:-}"

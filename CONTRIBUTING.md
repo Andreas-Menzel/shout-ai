@@ -36,14 +36,27 @@ in [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md).
 - Match the surrounding style — small, focused types behind protocols, with
   doc comments that explain *why*.
 - Add or update tests for any behavior change.
-- If you touch the built-in rewrite prompts, follow the prompt-eval workflow in
-  the development docs — prompt changes are validated, not guessed.
+- If you touch the built-in rewrite prompts, follow
+  [*Prompt evaluation*](docs/DEVELOPMENT.md#prompt-evaluation) — prompt changes
+  are validated, not guessed, and the outgoing text must be recorded so existing
+  installs pick up the improvement.
 
 ## Reporting bugs
 
-Open an issue with your macOS version, whether Apple Intelligence is enabled,
-and clear steps to reproduce. Because Shout is local-first, please **never**
-paste private dictation content into a public issue.
+[Open an issue](https://github.com/Andreas-Menzel/shout-ai/issues/new/choose) —
+the bug form asks for the details that actually matter (macOS version, whether
+Apple Intelligence is enabled, which cleanup model, repro steps).
+
+Because Shout is local-first and issues are public, please **never** paste
+private dictation content. Use a harmless sentence that still reproduces the
+problem.
+
+Found a **security** issue? Don't open an issue — see
+[SECURITY.md](.github/SECURITY.md).
+
+## Code of Conduct
+
+This project follows the [Contributor Covenant](CODE_OF_CONDUCT.md).
 
 ## Third-party code
 

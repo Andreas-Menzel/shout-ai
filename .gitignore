@@ -13,6 +13,14 @@
 # are committed.
 /docs/recordings/*.mov
 
+# ---- Never commit signing material ----
+# scripts/make-signing-cert.sh generates a local identity via mktemp, so nothing
+# should land here — these are a backstop, not a workaround.
+*.p12
+*.pem
+*.cer
+*.mobileprovision
+
 # ---- macOS / editor cruft ----
 .DS_Store
 *.swp

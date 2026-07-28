@@ -36,7 +36,10 @@ public struct WhisperModelSpec: Sendable, Equatable, Identifiable {
         id: "large-v3-turbo",
         displayName: "Large v3 Turbo — multilingual, ~1.6 GB",
         fileName: "ggml-large-v3-turbo.bin",
-        url: URL(string: "https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-large-v3-turbo.bin")!,
+        // Pinned to an immutable revision, not `resolve/main`: the checksum below
+        // already fails closed, but a branch ref means an upstream re-publish
+        // turns every install into a checksum mismatch that looks like an attack.
+        url: URL(string: "https://huggingface.co/ggerganov/whisper.cpp/resolve/5359861c739e955e79d9a303bcbc70fb988958b1/ggml-large-v3-turbo.bin")!,
         expectedBytes: 1_624_555_275,
         // SHA-256 of the official ggml-large-v3-turbo.bin. Pinned so a freshly
         // downloaded file is verified before it's ever loaded by native ggml —
