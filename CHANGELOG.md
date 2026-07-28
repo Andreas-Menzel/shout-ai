@@ -6,7 +6,9 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html). The authoritative version
 number is `CFBundleShortVersionString` in `Resources/Info.plist`.
 
-## [1.0.0] — not yet tagged
+## [Unreleased]
+
+## [1.0.0] — 2026-07-28
 
 First public release. Built from source; no notarized download yet.
 
@@ -94,4 +96,5 @@ upgrade notes.
 - Dead code: `ProfileStore.addProfile` and `ProfileStore.update` (superseded by `duplicate` and
   `save`), `ModelRegistry.defaultEntry`, and the unused `Theme.Space.xs`/`.xl` steps.
 
-[Unreleased]: https://github.com/Andreas-Menzel/shout-ai/commits/main
+[Unreleased]: https://github.com/Andreas-Menzel/shout-ai/compare/v1.0.0...HEAD
+[1.0.0]: https://github.com/Andreas-Menzel/shout-ai/releases/tag/v1.0.0
