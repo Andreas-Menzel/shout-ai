@@ -154,6 +154,23 @@ sequence for ffmpeg to stitch. The heavy ProRes masters that
 PNG output is not byte-reproducible, so re-rendering always shows a diff even when nothing
 visibly changed.
 
+The committed set is the complete output of those two targets, so re-running either one should
+change pixels, never the file list:
+
+| File | Used in |
+|---|---|
+| `screenshots/pill-classic-recording.png`, `pill-notch-recording.png` | README, the two pill styles side by side |
+| `screenshots/pill-classic-polishing.png`, `pill-classic-inserted.png` | README, the later pipeline stages |
+| `screenshots/pill-classic-voice-switch.png` | README, spoken profile switching |
+| `screenshots/pill-notch-profile-list.png` | README, the profile picker |
+| `recordings/pill-classic-workflow.apng` | README, the animation at the top |
+| `recordings/pill-classic-recording.apng` | the recording state alone, for shorter write-ups |
+| `recordings/pill-classic-workflow.webm`, `pill-classic-recording.webm` | the same two clips, ~5× smaller, for use outside GitHub |
+
+Each clip is written twice on purpose: GitHub renders an APNG inline through a plain `<img>`, which
+is why the README embeds those, while `<video>` pointing at a repo path is not reliably played. The
+WebM is the better asset anywhere you control the page.
+
 ## Debugging
 
 - **Logs:** `log stream --predicate 'subsystem == "de.menzelini.shout"'` (categories: `app`,

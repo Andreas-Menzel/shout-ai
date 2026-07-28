@@ -33,6 +33,13 @@ capsule or as a Dynamic Island notch:
   <img src="docs/screenshots/pill-notch-recording.png" alt="Notch pill while recording" width="300">
 </p>
 
+The later stages read the same way — the cleanup pass running, then the text handed to your app:
+
+<p align="center">
+  <img src="docs/screenshots/pill-classic-polishing.png" alt="Classic pill during the cleanup pass" width="300">
+  <img src="docs/screenshots/pill-classic-inserted.png" alt="Classic pill confirming the text was inserted" width="300">
+</p>
+
 ## Requirements
 
 - **macOS 26 or later**, on **Apple Silicon**
@@ -132,6 +139,11 @@ moment it recognizes it, and a soft tick confirms it: whatever the pill shows wh
 recording is exactly what runs. Misheard? Say the name or number again, or say a cancel word
 ("cancel", "abbrechen") to keep going with the current profile. The trigger phrase, cancel words,
 and whether the switch sticks for later dictations are all configurable.
+
+<p align="center">
+  <img src="docs/screenshots/pill-classic-voice-switch.png"
+       alt="The pill naming the profile it recognized from the spoken trigger phrase" width="300">
+</p>
 
 **Settings** (from the menu bar):
 
