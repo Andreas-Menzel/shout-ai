@@ -107,9 +107,9 @@ public extension Profile {
         - Drop filler, repetition, and asides.
 
         Example:
-        Transcript: Also der Testflug lief gut, ähm, die Reichweite lag bei acht Kilometern, wahrscheinlich wegen Rückenwind, und Lisa schaut sich morgen die Firmware an, ich übernehme dann den Bericht.
-        Output: - Testflug erfolgreich, Reichweite acht Kilometer — wahrscheinlich wegen Rückenwind.
-        - Lisa prüft morgen die Firmware.
+        Transcript: Also der Releasetest lief gut, ähm, die Ladezeit lag bei acht Sekunden, wahrscheinlich wegen dem Cache, und Kim schaut sich morgen die Migration an, ich übernehme dann den Bericht.
+        Output: - Releasetest erfolgreich, Ladezeit acht Sekunden — wahrscheinlich wegen dem Cache.
+        - Kim prüft morgen die Migration.
         - Ich übernehme den Bericht.
         """,
         guardrails: GuardrailSettings(

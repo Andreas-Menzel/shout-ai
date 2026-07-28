@@ -6,7 +6,14 @@ let package = Package(
     platforms: [.macOS("26.0")],
     targets: [
         // Prebuilt whisper.cpp (Metal-accelerated) from the official v1.9.1 release.
-        .binaryTarget(name: "whisper", path: "Vendor/whisper.xcframework"),
+        // Fetched and checksum-verified by SwiftPM itself, so a fresh clone builds
+        // with no bootstrap step. The checksum is enforced before the framework is
+        // ever unzipped or executed: a moved tag or re-published asset fails closed
+        // with "artifact ... has changed checksum". Bump both fields together.
+        .binaryTarget(
+            name: "whisper",
+            url: "https://github.com/ggml-org/whisper.cpp/releases/download/v1.9.1/whisper-v1.9.1-xcframework.zip",
+            checksum: "8c3ecbe73f48b0cb9318fc3058264f951ab336fd530e82c4ccdd2298d1311a4c"),
 
         // Engine layer: audio capture, transcription, rewrite, model management.
         .target(

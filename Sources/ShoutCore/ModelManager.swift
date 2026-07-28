@@ -12,20 +12,23 @@ public struct WhisperModelSpec: Sendable, Equatable, Identifiable {
     public let displayName: String
     public let fileName: String
     public let url: URL
-    /// Minimum plausible byte size; anything smaller is a truncated download.
-    public let minBytes: Int64
+    /// Exact byte size of the official file. Checked for equality, not as a
+    /// floor: a download truncated in its final stretch is still large enough to
+    /// look plausible, and treating it as complete would fail every later
+    /// transcription with no signal about why.
+    public let expectedBytes: Int64
     /// Optional lowercase hex SHA-256. When set, a freshly downloaded file is
     /// verified against it before use, closing the supply-chain gap. Left nil
     /// until a hash is pinned for the release.
     public let sha256: String?
 
     public init(id: String, displayName: String, fileName: String, url: URL,
-                minBytes: Int64, sha256: String? = nil) {
+                expectedBytes: Int64, sha256: String? = nil) {
         self.id = id
         self.displayName = displayName
         self.fileName = fileName
         self.url = url
-        self.minBytes = minBytes
+        self.expectedBytes = expectedBytes
         self.sha256 = sha256
     }
 
@@ -34,7 +37,7 @@ public struct WhisperModelSpec: Sendable, Equatable, Identifiable {
         displayName: "Large v3 Turbo — multilingual, ~1.6 GB",
         fileName: "ggml-large-v3-turbo.bin",
         url: URL(string: "https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-large-v3-turbo.bin")!,
-        minBytes: 1_500_000_000,
+        expectedBytes: 1_624_555_275,
         // SHA-256 of the official ggml-large-v3-turbo.bin. Pinned so a freshly
         // downloaded file is verified before it's ever loaded by native ggml —
         // a tampered or truncated download fails closed. This model is a stable,
@@ -74,7 +77,11 @@ public final class ModelManager {
         if case .downloading = state { return }
         let attrs = try? FileManager.default.attributesOfItem(atPath: modelPath.path)
         let size = (attrs?[.size] as? Int64) ?? 0
-        if size >= spec.minBytes {
+        // Exact size, so a partial download is reported missing (and re-fetched)
+        // rather than loaded. The SHA-256 pin is enforced on the download itself
+        // — see DownloadDelegate — since re-hashing 1.6 GB on every launch would
+        // stall startup for seconds.
+        if size == spec.expectedBytes {
             state = .ready
         } else if case .failed = state {
             // keep the error visible until the next download attempt
@@ -92,7 +99,7 @@ public final class ModelManager {
 
         let delegate = DownloadDelegate(
             destination: modelPath,
-            minBytes: spec.minBytes,
+            expectedBytes: spec.expectedBytes,
             sha256: spec.sha256,
             onProgress: { [weak self] p in self?.state = .downloading(p) },
             onFinish: { [weak self] result in
@@ -119,16 +126,16 @@ public final class ModelManager {
 // main thread. That invariant is what makes the unchecked conformance safe.
 private final class DownloadDelegate: NSObject, URLSessionDownloadDelegate, @unchecked Sendable {
     let destination: URL
-    let minBytes: Int64
+    let expectedBytes: Int64
     let sha256: String?
     let onProgress: (Double) -> Void
     let onFinish: (Result<Void, Error>) -> Void
 
-    init(destination: URL, minBytes: Int64, sha256: String?,
+    init(destination: URL, expectedBytes: Int64, sha256: String?,
          onProgress: @escaping (Double) -> Void,
          onFinish: @escaping (Result<Void, Error>) -> Void) {
         self.destination = destination
-        self.minBytes = minBytes
+        self.expectedBytes = expectedBytes
         self.sha256 = sha256
         self.onProgress = onProgress
         self.onFinish = onFinish
@@ -149,7 +156,7 @@ private final class DownloadDelegate: NSObject, URLSessionDownloadDelegate, @unc
             // body still fires this callback, and marking a truncated file
             // "ready" would fail every later transcription with no signal.
             let size = ((try? FileManager.default.attributesOfItem(atPath: location.path))?[.size] as? Int64) ?? 0
-            guard size >= minBytes else {
+            guard size == expectedBytes else {
                 try? FileManager.default.removeItem(at: location)
                 onFinish(.failure(ShoutError.modelDownloadIncomplete))
                 return

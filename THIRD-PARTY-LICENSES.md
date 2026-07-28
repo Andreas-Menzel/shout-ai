@@ -13,8 +13,14 @@ also bundled inside `Shout.app` (see `scripts/bundle.sh`).
 On-device speech transcription is provided by
 [whisper.cpp](https://github.com/ggml-org/whisper.cpp) and its tensor library
 [ggml](https://github.com/ggml-org/ggml). A prebuilt `whisper.xcframework`
-(v1.9.1) is downloaded by `scripts/fetch-whisper.sh` and **embedded into the
-distributed `Shout.app`**, so its license travels with any binary you ship.
+(v1.9.1) is downloaded by SwiftPM from the `binaryTarget` declared in
+`Package.swift` and **embedded into the distributed `Shout.app`**, so its
+license travels with any binary you ship.
+
+The corresponding source for that binary is whisper.cpp at tag `v1.9.1`
+(<https://github.com/ggml-org/whisper.cpp/releases/tag/v1.9.1>); the framework
+is the official release asset for that tag, pinned by SHA-256 in
+`Package.swift`.
 
 Both are distributed under the MIT License:
 
@@ -98,5 +104,8 @@ Symbols, whose license does not permit use in app icons) and is covered by
 Shout's own GPL-3.0-or-later license.
 
 Note: SF Symbols *are* used within the app's user interface at runtime (menu
-bar, settings, profile glyphs) — the use Apple's license expressly allows — but
-none are redistributed as image files in this repository.
+bar, settings, profile glyphs) — the use Apple's license expressly allows. The
+documentation screenshots and recordings under `docs/` are captures of that
+interface and therefore contain rendered SF Symbols. No SF Symbol is
+redistributed here as a standalone or repurposed asset, and none appear in the
+app icon.

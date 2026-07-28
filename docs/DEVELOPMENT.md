@@ -36,7 +36,7 @@ macOS 26+, Apple Silicon, Xcode 26+. See the README for the full list.
 ## Build
 
 ```sh
-make setup            # one-time: fetch whisper.xcframework (v1.9.1) + the 1.6 GB model
+make setup            # one-time: fetch the 1.6 GB speech model (only needed to dictate)
 make build            # swift build -c release
 make cli              # build just the shout-cli test harness
 make bundle           # assemble a signed build/Shout.app
@@ -51,10 +51,17 @@ any stable keychain identity (Apple Development / Developer ID / the `make cert`
 Signing"), then ad-hoc as a last resort. Ad-hoc signatures make macOS treat every rebuild as a new
 app, so privacy grants go stale — run `make cert` once to avoid that.
 
-The model and the whisper framework are both SHA-256-pinned: `make setup` verifies each download
-against a known-good hash (`WhisperModelSpec.sha256` / the default in `fetch-model.sh`, and the pin
-in `fetch-whisper.sh`) and fails closed on a mismatch. Override with `SHOUT_MODEL_SHA256` /
-`SHOUT_WHISPER_SHA256` when bumping a version.
+`swift build` and `swift test` need no setup step: the whisper.cpp framework (v1.9.1) is a
+`binaryTarget` with a `url` + `checksum` in `Package.swift`, so SwiftPM downloads it into
+`.build/artifacts/` and refuses it on a checksum mismatch — bump the URL and checksum together.
+`make setup` only fetches the speech model, which nothing but real dictation needs.
+
+The model is SHA-256-pinned in two places that must stay in sync: `WhisperModelSpec` (enforced on
+the app's own download, before the file is ever handed to native ggml) and the default in
+`scripts/fetch-model.sh` (verified on *every* run, so a previously interrupted file is caught
+rather than trusted). Both also check the exact expected byte size, so a download truncated near
+the end is rejected instead of passing as complete. Override with `SHOUT_MODEL_SHA256` when
+bumping the model.
 
 ## Testing
 
@@ -110,5 +117,7 @@ Sources/Shout/           the menu-bar app
   UI/                        Theme, menu bar, pill, notch pill, settings, setup, history
 Sources/shout-cli/       headless test harness + fnwatch diagnostic
 Tests/ShoutCoreTests/    unit tests for the engine layer's pure logic
-Vendor/                  whisper.xcframework (fetched, not committed)
 ```
+
+(Selected files — the tree above names the load-bearing types, not every source file.)
+The whisper.xcframework is not in the repo: SwiftPM fetches it into `.build/artifacts/`.

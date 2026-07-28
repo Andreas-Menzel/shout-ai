@@ -22,19 +22,24 @@ Intelligence is off or unsure, it inserts the raw transcript instead — dictati
 
 - **macOS 26 or later**, on **Apple Silicon**
 - **Xcode 26+** and its command-line tools (to build from source)
-- **~2 GB free disk** for the speech model (~1.6 GB) and the whisper framework
+- **~2.5 GB free disk** — the speech model (~1.6 GB), the whisper framework (~184 MB), and build
+  output
 - **Apple Intelligence** enabled — *optional*, only for the cleanup pass; transcription works without it
 
 ## Install
 
 ```sh
-git clone <your-repo-url> shout-ai
+git clone https://github.com/Andreas-Menzel/shout-ai.git shout-ai
 cd shout-ai
 
-make setup            # one-time: downloads whisper.xcframework (v1.9.1) + the 1.6 GB model
+make setup            # one-time: downloads the 1.6 GB speech model
 make cert             # recommended, one-time: a stable signing identity (see note below)
 make run              # builds build/Shout.app and opens it
 ```
+
+The whisper.cpp framework (~184 MB) is fetched and checksum-verified by SwiftPM itself, so
+`swift build` and `swift test` work straight from a fresh clone — `make setup` only downloads
+the speech model you need in order to dictate.
 
 `make run` builds the app into `build/Shout.app` and launches it. Because there is no signed
 release yet, you build it yourself.
@@ -48,7 +53,12 @@ works too.
 
 ## First-run setup (the app walks you through this)
 
-1. Grant **Microphone**, **Input Monitoring**, and **Accessibility** permissions.
+1. Grant **Microphone**, **Input Monitoring**, and **Accessibility** permissions. Shout also
+   requests **Post Events** the first time it pastes text.
+   **One prompt is not in the checklist:** if Spotify or Apple Music is running when you dictate,
+   macOS asks for **Automation** ("Shout wants to control Spotify") — Shout pauses playback while
+   you speak and resumes afterwards. Declining is fine; dictation is unaffected. Turn it off
+   under *Settings ▸ Dictation ▸ While dictating* if you'd rather never see it.
 2. System Settings › Keyboard › **"Press 🌐 key to" → "Do Nothing"**
    (otherwise macOS's own dictation/emoji picker fights over the fn key).
 3. System Settings › **Apple Intelligence & Siri → enable Apple Intelligence**
@@ -93,7 +103,9 @@ History window. History is never uploaded.
   entries stale. Run `make reset-permissions`, then re-grant them in Setup — or run `make cert`
   once so this stops happening.
 - **"Downloading speech model…" or "not installed".** Open Setup and let the model finish
-  downloading (or retry). A partial/failed download is detected and not used.
+  downloading (or retry). An incomplete download is detected by its exact byte size and never
+  loaded, and every completed download is checked against a pinned SHA-256 before use — so a
+  truncated or tampered-with file is discarded rather than half-working.
 - **Text isn't inserted.** Grant **Accessibility** (the pill/notification says "grant
   Accessibility, press ⌘V"). Your text is kept on the clipboard so nothing is lost.
 - **fn triggers macOS dictation or the emoji picker.** Set System Settings › Keyboard ›
@@ -120,15 +132,19 @@ rm -rf "$HOME/Library/Application Support/Shout"
 # 4. Delete preferences
 defaults delete com.shoutai.Shout 2>/dev/null || true
 
-# 5. Reset the privacy permissions granted to Shout
-make reset-permissions         # Accessibility, Input Monitoring, Post Events, Microphone
+# 5. Delete any stored endpoint API keys (repeat until it reports no item found;
+#    or search for "Shout" in Keychain Access and delete the entries there)
+security delete-generic-password -s "com.shoutai.Shout.endpoint-key" 2>/dev/null || true
 
-# 6. If you ran `make cert`, remove the self-signed identity
+# 6. Reset the privacy permissions granted to Shout
+make reset-permissions         # Accessibility, Input Monitoring, Post Events,
+                               # Microphone, Automation
+
+# 7. If you ran `make cert`, remove the self-signed identity
 security delete-identity -c "Shout Dev Signing" 2>/dev/null || true
-
-# 7. Optional: remove the fetched whisper framework and the cloned repo
-rm -rf Vendor/whisper.xcframework
 ```
+
+`make clean` in step 2 also removes the fetched whisper framework, which lives under `.build/`.
 
 Finally, revert System Settings › Keyboard › **"Press 🌐 key to"** back to your preferred value
 (it was set to "Do Nothing" during setup).
@@ -144,11 +160,13 @@ non-local host (Settings ▸ Dictation ▸ *Manage endpoints…*) and select it,
 **transcript text** is sent to that server to be cleaned up. Shout marks such models as leaving
 your Mac — in the model list, in a warning under the picker, and with an indicator on the pill
 while it runs — so it never happens silently. Your **audio** still never leaves the device, and
-the on-device Apple Intelligence model remains the default. It writes three things locally:
+the on-device Apple Intelligence model remains the default. It writes four things locally:
 
 - Speech model: `~/Library/Application Support/Shout/models/ggml-large-v3-turbo.bin`
 - Dictation history: `~/Library/Application Support/Shout/history.json` (optional — see Settings)
 - Preferences: the `com.shoutai.Shout` domain
+- Endpoint API keys: your login Keychain, service `com.shoutai.Shout.endpoint-key` — only if you
+  add an endpoint that needs one. Keys are never written to the preferences file.
 
 ## Contributing / developing
 

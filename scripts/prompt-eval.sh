@@ -33,8 +33,8 @@ run() {
 
 # --- Clean-up: the meaning-preserving default ---
 run C1 cleanup de "Ähm, also, ich schick dir das Feedback bis morgen, okay?"
-run C2 cleanup de "Ich wollte nochmal kurz zusammenfassen, was wir heute besprochen haben. Ähm, also erstens, die Flugroute für den Windpark ist, äh, ist freigegeben. Zweitens, die Wärmebildkamera muss noch, ähm, kalibriert werden, und drittens schicke ich dir den Bericht bis Freitag, okay?"
-run C3 cleanup de "Dann kannst du, nee warte, ich fahre nochmal zurück und hole die Ersatzakkus."
+run C2 cleanup de "Ich wollte nochmal kurz zusammenfassen, was wir heute besprochen haben. Ähm, also erstens, der Zeitplan für das Release ist, äh, ist freigegeben. Zweitens, die Datenbank muss noch, ähm, migriert werden, und drittens schicke ich dir den Bericht bis Freitag, okay?"
+run C3 cleanup de "Dann kannst du, nee warte, ich fahre nochmal zurück und hole die Unterlagen."
 run C4 cleanup en "uh, I mean, the deployment worked fine"
 run C5 cleanup en "let's meet at three, no wait, actually five, at the office"
 run C6 cleanup de "Also, ähm, ich glaube halt, dass wir quasi den Prototyp, äh, den Prototyp nochmal testen sollten, ne?"
@@ -52,12 +52,12 @@ run E1 prompt de "Ähm, ich brauch was, das meine E-Mails zusammenfasst, also di
 run E2 prompt en "I want the AI to review my Swift code for retain cycles and, um, also check that the tests actually cover the new code paths, format the output as a checklist"
 
 # --- Summarize ---
-run S1 summarize de "Also, wir haben heute den Testflug am Windpark gemacht, ähm, die Batterie hat nur zwanzig Minuten gehalten statt dreißig, wahrscheinlich wegen der Kälte. Die Aufnahmen von der Wärmebildkamera sind aber gut geworden. Achso, und der Kunde will den Bericht jetzt schon am Mittwoch statt am Freitag, das heißt wir müssen die Auswertung vorziehen. Tim kümmert sich um die Rohdaten und ich mach dann die Zusammenfassung."
+run S1 summarize de "Also, wir haben heute den Lasttest gemacht, ähm, der Server hat nur zwanzig Minuten durchgehalten statt dreißig, wahrscheinlich wegen dem Speicherleck. Die Messwerte vom Profiler sind aber gut geworden. Achso, und das Team will den Bericht jetzt schon am Mittwoch statt am Freitag, das heißt wir müssen die Auswertung vorziehen. Jan kümmert sich um die Rohdaten und ich mach dann die Zusammenfassung."
 run S2 summarize en "okay so quick update on the release, um, we found two regressions in the beta, one in the audio pipeline and one in the settings window, the audio one is already fixed, the settings one needs another day. So we're pushing the release from monday to wednesday. Also marketing asked if we can include the new icon, I said yes since it's already done."
 
 # --- Translate → English ---
-run T1 translate de "Ähm, also, der Flug musste wegen, äh, wegen starkem Wind abgebrochen werden, wir versuchen es morgen früh nochmal."
-run T2 translate en "the firmware update fixed the gimbal drift"
+run T1 translate de "Ähm, also, der Deploy musste wegen, äh, wegen einem Fehler abgebrochen werden, wir versuchen es morgen früh nochmal."
+run T2 translate en "the firmware update fixed the sensor drift"
 
 # --- Glossary biasing (final spelling is guaranteed by TextNormalizer either way) ---
 run G1 cleanup de "Ähm, wir müssen die Daten noch in die HTTP Server hochladen, und die Camera GPS braucht ein Update." "HTTPServer,CameraGPS"

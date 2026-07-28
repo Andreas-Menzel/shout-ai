@@ -143,9 +143,9 @@ final class VoiceSwitchDecisionTests: XCTestCase {
         d.apply(classify("use profile summarize"))
         d.freeze()
         XCTAssertEqual(
-            outcome(d, "Use profile, summarize. Hello there, I am Andreas."),
+            outcome(d, "Use profile, summarize. Hello there, I am Alex."),
             .switched(profileID: "builtin-summarize", profileName: "Summarize",
-                      content: "Hello there, I am Andreas."))
+                      content: "Hello there, I am Alex."))
     }
 
     func testLatchedBeatsADifferentFinalMatch() {

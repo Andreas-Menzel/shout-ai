@@ -14,7 +14,14 @@ terms.
 You'll need **macOS 26+ on Apple Silicon** and **Xcode 26+**. Then:
 
 ```sh
-make setup      # fetch whisper.xcframework + the speech model
+swift test      # works straight from a fresh clone — no setup step needed
+```
+
+SwiftPM fetches and checksum-verifies the whisper.cpp framework itself, so building and testing
+need nothing else. To actually *run* Shout and dictate:
+
+```sh
+make setup      # one-time: the 1.6 GB speech model
 make cert       # optional: a stable signing identity so permissions survive rebuilds
 make run        # build and launch build/Shout.app
 ```

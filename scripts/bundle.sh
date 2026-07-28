@@ -19,8 +19,14 @@ cp LICENSE "$APP/Contents/Resources/LICENSE.txt"
 cp THIRD-PARTY-LICENSES.md "$APP/Contents/Resources/THIRD-PARTY-LICENSES.txt"
 
 # whisper.xcframework ships a dynamic framework — embed it and point the
-# executable's rpath at Contents/Frameworks.
-SLICE=$(ls -d Vendor/whisper.xcframework/macos-*/whisper.framework | head -1)
+# executable's rpath at Contents/Frameworks. SwiftPM fetches the xcframework
+# itself (see the binaryTarget in Package.swift) and unpacks it under
+# .build/artifacts/<package-dir>/, so glob the package directory.
+SLICE=$(ls -d .build/artifacts/*/whisper/whisper.xcframework/macos-*/whisper.framework 2>/dev/null | head -1)
+if [ -z "$SLICE" ]; then
+    echo "error: whisper.framework not found under .build/artifacts — run 'swift build' first" >&2
+    exit 1
+fi
 cp -R "$SLICE" "$APP/Contents/Frameworks/"
 install_name_tool -add_rpath "@executable_path/../Frameworks" "$APP/Contents/MacOS/Shout" 2>/dev/null || true
 

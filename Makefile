@@ -1,8 +1,10 @@
 .PHONY: setup build bundle run cli cert reset-permissions clean
 
-# One-time: fetch whisper.xcframework and the speech model.
+# One-time: fetch the ~1.6 GB speech model. The whisper.cpp framework is
+# fetched by SwiftPM itself (see Package.swift), so `swift build` and
+# `swift test` work straight from a fresh clone — this is only needed to
+# actually dictate.
 setup:
-	scripts/fetch-whisper.sh
 	scripts/fetch-model.sh
 
 build:
@@ -30,6 +32,7 @@ reset-permissions:
 	-tccutil reset ListenEvent com.shoutai.Shout
 	-tccutil reset PostEvent com.shoutai.Shout
 	-tccutil reset Microphone com.shoutai.Shout
+	-tccutil reset AppleEvents com.shoutai.Shout
 
 clean:
 	rm -rf .build build

@@ -2,16 +2,10 @@
 /.build/
 /build/
 
-# ---- Fetched at setup time (NOT committed) ----
-# Prebuilt whisper.cpp framework — scripts/fetch-whisper.sh (~184 MB)
-/Vendor/whisper.xcframework/
-/Vendor/*.zip
-# Speech model — scripts/fetch-model.sh (~1.6 GB); lives in Application Support
-*.bin
-
-# ---- Generated at runtime ----
-# ChimeSynth renders its voice-switch cues to disk
-*.wav
+# The whisper.cpp framework (~184 MB) is fetched and checksum-verified by
+# SwiftPM from the binaryTarget in Package.swift, into .build/artifacts/.
+# The speech model (~1.6 GB) is fetched by scripts/fetch-model.sh into
+# ~/Library/Application Support/Shout/models/ — neither lives in the repo.
 
 # ---- Documentation media ----
 # Heavy ProRes/QuickTime editing masters — regenerable via
