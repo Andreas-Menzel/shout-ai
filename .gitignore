@@ -21,11 +21,6 @@
 *.cer
 *.mobileprovision
 
-# ---- Local working notes ----
-# Pre-release audit working document: it quotes the very things that were
-# scrubbed from the tree, so it must never be committed.
-/OSS-RELEASE-REPORT.md
-
 # ---- macOS / editor cruft ----
 .DS_Store
 *.swp
