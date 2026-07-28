@@ -6,9 +6,29 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html). The authoritative version
 number is `CFBundleShortVersionString` in `Resources/Info.plist`.
 
-## [Unreleased]
+## [1.0.0] — not yet tagged
 
-Release-readiness work ahead of going public. Folded into 1.0.0 if it is tagged from here.
+First public release. Built from source; no notarized download yet.
+
+- Push-to-talk dictation: hold **fn** to record, release to insert; double-tap to latch
+  hands-free; **Esc** cancels at any stage.
+- On-device transcription with whisper.cpp (`large-v3-turbo`, Metal), German and English with
+  auto-detection.
+- On-device cleanup with Apple Intelligence, with a deterministic `TextNormalizer` pass and a
+  guardrail that inserts the raw transcript rather than a bad rewrite.
+- Optional OpenAI-compatible endpoints for the cleanup stage, including local servers (Ollama,
+  LM Studio). Remote hosts are marked everywhere they appear.
+- Profiles: Clean-up, Professional writing, Prompt engineer, Summarize, Translate → English,
+  plus user-defined profiles with their own prompt, model, glyph, and tint.
+- Optional spoken profile switching ("use profile summarize, …") with audible confirmation cues.
+- Floating pill UI in two styles (classic capsule, Dynamic Island notch), with live transcript
+  preview.
+- Optional local dictation history, glossary for names and jargon, and media auto-pause for
+  Spotify and Apple Music.
+
+The sections below record the release-readiness work done while the repository was still private.
+No published version ever behaved differently, so they are history for contributors rather than
+upgrade notes.
 
 ### Added
 
@@ -73,25 +93,5 @@ Release-readiness work ahead of going public. Folded into 1.0.0 if it is tagged 
 
 - Dead code: `ProfileStore.addProfile` and `ProfileStore.update` (superseded by `duplicate` and
   `save`), `ModelRegistry.defaultEntry`, and the unused `Theme.Space.xs`/`.xl` steps.
-
-## [1.0.0] — not yet tagged
-
-First public release. Built from source; no notarized download yet.
-
-- Push-to-talk dictation: hold **fn** to record, release to insert; double-tap to latch
-  hands-free; **Esc** cancels at any stage.
-- On-device transcription with whisper.cpp (`large-v3-turbo`, Metal), German and English with
-  auto-detection.
-- On-device cleanup with Apple Intelligence, with a deterministic `TextNormalizer` pass and a
-  guardrail that inserts the raw transcript rather than a bad rewrite.
-- Optional OpenAI-compatible endpoints for the cleanup stage, including local servers (Ollama,
-  LM Studio). Remote hosts are marked everywhere they appear.
-- Profiles: Clean-up, Professional writing, Prompt engineer, Summarize, Translate → English,
-  plus user-defined profiles with their own prompt, model, glyph, and tint.
-- Optional spoken profile switching ("use profile summarize, …") with audible confirmation cues.
-- Floating pill UI in two styles (classic capsule, Dynamic Island notch), with live transcript
-  preview.
-- Optional local dictation history, glossary for names and jargon, and media auto-pause for
-  Spotify and Apple Music.
 
 [Unreleased]: https://github.com/Andreas-Menzel/shout-ai/commits/main

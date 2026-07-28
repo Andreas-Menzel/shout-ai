@@ -171,6 +171,38 @@ Each clip is written twice on purpose: GitHub renders an APNG inline through a p
 is why the README embeds those, while `<video>` pointing at a repo path is not reliably played. The
 WebM is the better asset anywhere you control the page.
 
+## Releasing
+
+`CFBundleShortVersionString` in `Resources/Info.plist` is the authoritative version; `README.md`
+and `CHANGELOG.md` restate it and must not drift. `make bump` is what keeps them in step:
+
+```sh
+DRY_RUN=1 make bump VERSION=1.0.1   # show the diff, then undo it
+make bump VERSION=1.0.1             # write, test, commit, tag — but do not push
+```
+
+It writes the version into all three files, stamps `CFBundleVersion` with the commit count so each
+build has an increasing build number, closes `## [Unreleased]` into `## [1.0.1] — <date>`, opens a
+fresh `## [Unreleased]`, rewrites the changelog's link definitions, runs the test suite, then
+commits and creates an **annotated** tag whose body is that release's changelog section.
+
+Pushing is deliberately left to you, because a published tag should not be moved:
+
+```sh
+git push origin main --follow-tags
+gh release create v1.0.1 --title "Shout v1.0.1" --notes-from-tag
+```
+
+It refuses rather than guesses: a dirty tree, a branch other than `main` (`ALLOW_BRANCH=1`
+overrides), a tag that already exists locally or on `origin`, a changelog with nothing to release,
+and the one case that needs a human — an `[Unreleased]` section *and* a section for the version
+being released, where only you can decide which prose belongs where. `SKIP_TESTS=1` exists but
+means tagging something unverified.
+
+**GPL-3.0 §6:** the moment a built `.app` or `.dmg` is attached to a release, the Corresponding
+Source has to accompany it. Releasing from a tag covers this — GitHub attaches the source archives
+automatically — so never publish a binary from an untagged build.
+
 ## Debugging
 
 - **Logs:** `log stream --predicate 'subsystem == "de.menzelini.shout"'` (categories: `app`,

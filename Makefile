@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 # Copyright (C) 2026 Andreas Menzel
-.PHONY: help setup build test bundle run cli cert screenshots recordings reset-permissions clean
+.PHONY: help setup build test bundle run cli cert screenshots recordings bump reset-permissions clean
 
 # Default to help, so a bare `make` never kicks off a 1.6 GB download.
 .DEFAULT_GOAL := help
@@ -17,6 +17,7 @@ help:
 	@echo "  cli                build just the shout-cli test harness"
 	@echo "  screenshots        re-render docs/screenshots (off-screen, no display needed)"
 	@echo "  recordings         re-render docs/recordings (needs ffmpeg)"
+	@echo "  bump               cut a release: make bump VERSION=1.0.1 (commits + tags)"
 	@echo "  reset-permissions  clear stale TCC entries after a signature change"
 	@echo "  clean              rm -rf .build build"
 	@echo ""
@@ -58,6 +59,16 @@ recordings:
 # survive rebuilds (asks for your login password — run it yourself).
 cert:
 	scripts/make-signing-cert.sh
+
+# Cut a release: write the version into Info.plist / README / CHANGELOG, run
+# the tests, then commit and tag. Pushing stays manual — the script prints the
+# commands. DRY_RUN=1 previews and reverts.
+bump:
+	@test -n "$(VERSION)" || { \
+		echo "usage: make bump VERSION=1.0.1"; \
+		echo "       DRY_RUN=1 make bump VERSION=1.0.1   # preview only"; \
+		exit 1; }
+	scripts/bump-version.sh "$(VERSION)"
 
 # Clear Shout's stale privacy entries after a signature change, then
 # re-grant them fresh in the app's Setup window.
