@@ -37,7 +37,6 @@ final class ModelRegistry {
 
     /// The entry the default id points at, falling back to Apple if the stored
     /// id no longer resolves (e.g. its endpoint was deleted).
-    var defaultEntry: ModelEntry { entry(id: defaultID) ?? .appleFoundation }
 
     // MARK: - Endpoint CRUD
 

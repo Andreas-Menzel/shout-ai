@@ -6,7 +6,7 @@ import XCTest
 
 // Shared prompt/guard logic: `RewriteSupport` (endsWithQuestion, postprocess)
 // backs every engine; `GuardrailSettings.approve` is the per-profile guard.
-final class RewriterTests: XCTestCase {
+final class RewriteSupportTests: XCTestCase {
 
     // MARK: endsWithQuestion
 

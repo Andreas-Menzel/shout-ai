@@ -183,7 +183,7 @@ struct SetupView: View {
             }
         case .downloading(let progress):
             VStack(alignment: .leading, spacing: 6) {
-                Text("Downloading… \(Int(progress * 100)) %")
+                Text("Downloading… \(Int(progress * 100))%")
                 ProgressView(value: progress)
             }
         case .failed(let message):

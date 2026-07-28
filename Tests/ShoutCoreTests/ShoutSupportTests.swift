@@ -4,7 +4,7 @@
 import XCTest
 @testable import ShoutCore
 
-final class SupportTests: XCTestCase {
+final class ShoutSupportTests: XCTestCase {
 
     func testWordCount() {
         XCTAssertEqual(wordCount("  hello   world "), 2)

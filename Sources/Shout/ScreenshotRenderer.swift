@@ -1,6 +1,13 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Copyright (C) 2026 Andreas Menzel
 
+// Documentation tooling only — excluded from release builds. The renderer exists
+// to rasterise the real pill views for docs/, so shipping it (and the AppState
+// hooks it drives) in a release binary would be dead weight on the hot path of
+// every phase change. Both consumers run the debug binary: see
+// scripts/render-screenshots.sh and scripts/render-recording.sh.
+#if DEBUG
+
 import AppKit
 import ShoutCore
 import SwiftUI
@@ -365,3 +372,5 @@ private final class PreviewTranscriber: TranscriptionEngine, @unchecked Sendable
         throw CancellationError()
     }
 }
+
+#endif // DEBUG

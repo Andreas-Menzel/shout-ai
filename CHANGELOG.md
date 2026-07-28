@@ -33,6 +33,27 @@ Release-readiness work ahead of going public. Folded into 1.0.0 if it is tagged 
   redistributed as image files, and now state the corresponding source for the embedded
   framework.
 - Built-in prompt and evaluation fixtures use neutral example content.
+- The documentation screenshot renderer (and the `AppState` hooks it drives) is now `#if DEBUG`,
+  so ~370 lines of docs tooling and a check on the hot path of every state change no longer ship
+  in release builds. Both consumers already used the debug binary, so nothing changed for them.
+- Interim transcription passes now copy only the bounded head/tail windows they decode instead of
+  the whole take. Holding a whole-buffer snapshot left the recorder's array multiply-referenced,
+  so the next append on the audio render thread copied everything — up to 19 MB at the maximum
+  dictation length, every 250–600 ms. That was a plausible cause of audio glitches on long
+  hands-free takes.
+- Loopback detection now covers all of `127.0.0.0/8` and `.localhost`, so a local endpoint on
+  `127.0.0.2` is no longer labelled as leaving your Mac.
+- The embedded `whisper.framework` is thinned to arm64 when bundling: 5.5 MB → 2.7 MB, for a
+  6.4 MB app. `bundle.sh` also no longer swallows an `install_name_tool` failure, which would
+  have surfaced later as a dyld load error.
+- Corrected comments that described `prewarm` as caching the instruction prefill across
+  dictations. It does not — prefill is per session, and each rewrite deliberately gets a fresh
+  session so one dictation cannot leak into the next one's context.
+
+### Removed
+
+- Dead code: `ProfileStore.addProfile` and `ProfileStore.update` (superseded by `duplicate` and
+  `save`), `ModelRegistry.defaultEntry`, and the unused `Theme.Space.xs`/`.xl` steps.
 
 ## [1.0.0] — not yet tagged
 

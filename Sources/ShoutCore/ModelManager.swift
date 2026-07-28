@@ -52,6 +52,51 @@ public struct WhisperModelSpec: Sendable, Equatable, Identifiable {
     public static let all: [WhisperModelSpec] = [.largeV3Turbo]
 }
 
+/// Outcome of checking a model file on disk against its spec.
+public enum ModelFileCheck: Equatable, Sendable {
+    case ok
+    /// Truncated (or padded) — the usual shape of an interrupted download.
+    case wrongSize(actual: Int64, expected: Int64)
+    /// Right length, wrong bytes: tampered with, or corrupted in place.
+    case checksumMismatch
+    case unreadable
+}
+
+extension WhisperModelSpec {
+    /// Checks a file against this spec. Extracted from the download path so the
+    /// gate that stands between a 1.6 GB blob and native ggml can be tested
+    /// directly, rather than only via a real download.
+    ///
+    /// Size is compared for *equality*: a download cut off in its final stretch
+    /// is still big enough to look plausible, which is exactly the case a
+    /// minimum-size floor waves through. Pass `verifyChecksum: false` to skip
+    /// hashing when the caller cannot afford to stream the whole file.
+    public func validateFile(at url: URL, verifyChecksum: Bool = true) -> ModelFileCheck {
+        guard let attrs = try? FileManager.default.attributesOfItem(atPath: url.path),
+              let size = attrs[.size] as? Int64
+        else { return .unreadable }
+
+        guard size == expectedBytes else {
+            return .wrongSize(actual: size, expected: expectedBytes)
+        }
+        guard verifyChecksum, let expected = sha256 else { return .ok }
+        guard let actual = Self.sha256Hex(ofFileAt: url) else { return .unreadable }
+        return actual.caseInsensitiveCompare(expected) == .orderedSame ? .ok : .checksumMismatch
+    }
+
+    /// Streams the file in 1 MB chunks so a 1.6 GB model isn't read into memory
+    /// just to hash it.
+    public static func sha256Hex(ofFileAt url: URL) -> String? {
+        guard let handle = try? FileHandle(forReadingFrom: url) else { return nil }
+        defer { try? handle.close() }
+        var hasher = SHA256()
+        while let chunk = try? handle.read(upToCount: 1 << 20), !chunk.isEmpty {
+            hasher.update(data: chunk)
+        }
+        return hasher.finalize().map { String(format: "%02x", $0) }.joined()
+    }
+}
+
 /// Tracks and downloads the Whisper model file for a given spec.
 @Observable
 public final class ModelManager {
@@ -66,30 +111,36 @@ public final class ModelManager {
     public var state: State = .missing
 
     @ObservationIgnored private var delegateBox: DownloadDelegate?
+    @ObservationIgnored private let modelsDirectory: URL
 
     public var modelPath: URL {
-        ShoutPaths.modelsDir.appendingPathComponent(spec.fileName)
+        modelsDirectory.appendingPathComponent(spec.fileName)
     }
 
-    public init(spec: WhisperModelSpec = .largeV3Turbo) {
+    /// `modelsDirectory` is injectable for tests; production always uses the real
+    /// Application Support location.
+    public init(spec: WhisperModelSpec = .largeV3Turbo,
+                modelsDirectory: URL = ShoutPaths.modelsDir) {
         self.spec = spec
+        self.modelsDirectory = modelsDirectory
         refresh()
     }
 
     public func refresh() {
         if case .downloading = state { return }
-        let attrs = try? FileManager.default.attributesOfItem(atPath: modelPath.path)
-        let size = (attrs?[.size] as? Int64) ?? 0
-        // Exact size, so a partial download is reported missing (and re-fetched)
-        // rather than loaded. The SHA-256 pin is enforced on the download itself
-        // — see DownloadDelegate — since re-hashing 1.6 GB on every launch would
-        // stall startup for seconds.
-        if size == spec.expectedBytes {
+        // Size only, deliberately: the SHA-256 pin is enforced when the file is
+        // downloaded (see DownloadDelegate), because re-hashing 1.6 GB on every
+        // launch would stall startup for seconds. An exact-size check still
+        // rejects the realistic failure — a download cut off partway.
+        switch spec.validateFile(at: modelPath, verifyChecksum: false) {
+        case .ok:
             state = .ready
-        } else if case .failed = state {
-            // keep the error visible until the next download attempt
-        } else {
-            state = .missing
+        case .wrongSize, .checksumMismatch, .unreadable:
+            if case .failed = state {
+                // keep the error visible until the next download attempt
+            } else {
+                state = .missing
+            }
         }
     }
 
@@ -102,8 +153,7 @@ public final class ModelManager {
 
         let delegate = DownloadDelegate(
             destination: modelPath,
-            expectedBytes: spec.expectedBytes,
-            sha256: spec.sha256,
+            spec: spec,
             onProgress: { [weak self] p in self?.state = .downloading(p) },
             onFinish: { [weak self] result in
                 switch result {
@@ -129,17 +179,15 @@ public final class ModelManager {
 // main thread. That invariant is what makes the unchecked conformance safe.
 private final class DownloadDelegate: NSObject, URLSessionDownloadDelegate, @unchecked Sendable {
     let destination: URL
-    let expectedBytes: Int64
-    let sha256: String?
+    let spec: WhisperModelSpec
     let onProgress: (Double) -> Void
     let onFinish: (Result<Void, Error>) -> Void
 
-    init(destination: URL, expectedBytes: Int64, sha256: String?,
+    init(destination: URL, spec: WhisperModelSpec,
          onProgress: @escaping (Double) -> Void,
          onFinish: @escaping (Result<Void, Error>) -> Void) {
         self.destination = destination
-        self.expectedBytes = expectedBytes
-        self.sha256 = sha256
+        self.spec = spec
         self.onProgress = onProgress
         self.onFinish = onFinish
     }
@@ -157,14 +205,12 @@ private final class DownloadDelegate: NSObject, URLSessionDownloadDelegate, @unc
         do {
             // Validate BEFORE committing: a dropped connection or an HTML error
             // body still fires this callback, and marking a truncated file
-            // "ready" would fail every later transcription with no signal.
-            let size = ((try? FileManager.default.attributesOfItem(atPath: location.path))?[.size] as? Int64) ?? 0
-            guard size == expectedBytes else {
-                try? FileManager.default.removeItem(at: location)
-                onFinish(.failure(ShoutError.modelDownloadIncomplete))
-                return
-            }
-            if let expected = sha256, Self.sha256Hex(of: location)?.caseInsensitiveCompare(expected) != .orderedSame {
+            // "ready" would fail every later transcription with no signal. The
+            // checksum runs here — this is the one moment the whole file is
+            // already on disk and not yet trusted.
+            let check = spec.validateFile(at: location)
+            guard check == .ok else {
+                Log.model.error("Rejected downloaded model: \(String(describing: check), privacy: .public)")
                 try? FileManager.default.removeItem(at: location)
                 onFinish(.failure(ShoutError.modelDownloadIncomplete))
                 return
@@ -184,14 +230,4 @@ private final class DownloadDelegate: NSObject, URLSessionDownloadDelegate, @unc
         }
     }
 
-    /// Streams the file so a 1.6 GB model isn't loaded into memory to hash it.
-    private static func sha256Hex(of url: URL) -> String? {
-        guard let handle = try? FileHandle(forReadingFrom: url) else { return nil }
-        defer { try? handle.close() }
-        var hasher = SHA256()
-        while let chunk = try? handle.read(upToCount: 1 << 20), !chunk.isEmpty {
-            hasher.update(data: chunk)
-        }
-        return hasher.finalize().map { String(format: "%02x", $0) }.joined()
-    }
 }

@@ -63,8 +63,11 @@ public protocol RewriteEngine: AnyObject, Sendable {
     /// things: the on-device model overrunning its ceiling is stuck, while a
     /// big endpoint model streaming steadily is just slow.
     var rewriteDeadline: TimeInterval { get }
-    /// Warm any resident session with the system instructions the next rewrite
-    /// will use, so the first real call doesn't pay cold-start cost.
+    /// Give the backend a chance to pay cold-start cost before the first real
+    /// rewrite. What that means is engine-specific and may be nothing at all: the
+    /// on-device engine warms model residency (not a prefill cache — see
+    /// `AppleFoundationRewriter`), while a remote endpoint has nothing to warm.
+    /// Callers must not assume it makes the next call fast.
     func prewarm(instructions: String)
     /// Run one completion and return the model's raw text. Prompt-building and
     /// quality guards live in `rewrite(profile:…)` — they're profile-driven, not

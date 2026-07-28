@@ -66,6 +66,11 @@ final class AppState {
     var audioLevel: Float = 0
 
     // MARK: - Screenshot rendering (off-screen documentation only)
+    // Written only by ScreenshotRenderer, which is itself debug-only. In release
+    // these collapse to compile-time constants, so the `phase` guard below and
+    // the pill's preview branches fold away instead of costing anything on the
+    // hot path of every state change.
+    #if DEBUG
     /// When true, `phase` changes skip the live floating panel and media-pause
     /// side-effects so the pill views can be rasterised head­lessly. Never set
     /// in normal operation.
@@ -78,6 +83,11 @@ final class AppState {
     /// renders (the system `ProgressView` can't animate under `ImageRenderer`);
     /// `nil` in normal operation (the real spinner is used).
     @ObservationIgnored var previewSpinnerAngle: Double?
+    #else
+    var isRenderingPreview: Bool { false }
+    var previewWaveform: [Float]? { nil }
+    var previewSpinnerAngle: Double? { nil }
+    #endif
 
     var fnMonitorActive = false
     /// User-toggled pause: tears down the fn listener so the key is free for
@@ -136,9 +146,12 @@ final class AppState {
     private let recorder = AudioRecorder()
     private let transcriber: any TranscriptionEngine
     private var pipeline: DictationPipeline
-    /// The rewrite engine for the active profile's resolved model, cached with
-    /// the entry id it was built for so a warmed session survives across
-    /// dictations and is rebuilt only when the selection changes.
+    /// The rewrite engine for the active profile's resolved model, cached with the
+    /// entry id it was built for and rebuilt only when the selection changes. What
+    /// this saves is engine *construction* — for the on-device backend that means
+    /// holding one `SystemLanguageModel` rather than building one per dictation.
+    /// It does not preserve a warmed session: each rewrite deliberately gets a
+    /// fresh one so dictations can't bleed into each other's context.
     private var cachedRewriter: (any RewriteEngine)?
     private var cachedEntryID: String?
     /// Set by `rewriteResolution` when the current dictation began with a voice
@@ -267,7 +280,11 @@ final class AppState {
         }
 
         // Retry the event tap until Input Monitoring is granted, and keep
-        // permission state fresh for the UI.
+        // permission state fresh for the UI. Deliberately never invalidated, and
+        // the activity token above is never ended: both are owned by the single
+        // process-lifetime AppState, and the fn tap must keep working — and keep
+        // being revived — for exactly as long as Shout runs. macOS reclaims both
+        // at exit. The closure holds `self` weakly regardless.
         monitorRetryTimer = Timer.scheduledTimer(withTimeInterval: 3, repeats: true) { [weak self] _ in
             Task { @MainActor in
                 guard let self, !self.isPaused else { return }
@@ -376,14 +393,14 @@ final class AppState {
     }
 
     /// Availability of the engine the active profile will use — for Settings to
-    /// show a warning. A throwaway engine; reading availability is cheap and
-    /// needs neither the API key nor a warmed session.
+    /// show a warning. A throwaway engine; reading availability is cheap and needs
+    /// neither the API key nor any warm-up.
     var activeRewriteAvailability: EngineAvailability {
         EngineFactory.makeRewriter(for: activeEntry, allowInsecureHTTP: settings.allowInsecureHTTP).availability
     }
 
     /// The engine for a profile's model, reused across dictations while the
-    /// resolved selection is unchanged so a warmed session isn't discarded.
+    /// resolved selection is unchanged (see `cachedRewriter`).
     private func rewriteEngine(for profile: Profile) -> any RewriteEngine {
         let entry = entry(for: profile)
         if cachedEntryID == entry.id, let engine = cachedRewriter { return engine }
@@ -694,33 +711,38 @@ final class AppState {
     @discardableResult
     private func updateInterimPreview(language: LanguageMode, glossary: [String]) async -> Bool {
         guard phase.isRecording, transcriber.isReady else { return false }
-        let samples = recorder.snapshot()
         let rate = AudioRecorder.targetSampleRate
-        // As little as ~0.4 s is enough to show first words; the silence/
-        // hallucination guards in the transcriber drop empty fragments.
-        guard samples.count >= Int(rate * Tuning.previewMinSeconds) else { return false }
-
         let headWindow = Int(rate * Tuning.voiceCommandHeadSeconds)
         let tailWindow = Int(rate * Tuning.previewWindowSeconds)
+        // Ask only for the windows this pass can actually use, so nothing copies
+        // audio it won't decode. Never take a whole-buffer snapshot: that would
+        // push a multi-megabyte copy onto the audio render thread — see
+        // AudioRecorder.windows(head:tail:).
+        let audio = recorder.windows(
+            head: needsCommandClassification ? headWindow : 0,
+            tail: settings.livePreview ? tailWindow : 0)
+        // As little as ~0.4 s is enough to show first words; the silence/
+        // hallucination guards in the transcriber drop empty fragments.
+        guard audio.totalCount >= Int(rate * Tuning.previewMinSeconds) else { return false }
+
         // Below both caps the head and tail clips are the same audio — the
         // common case — so a single decode serves both consumers.
-        let whole = samples.count <= min(headWindow, tailWindow)
+        let whole = audio.totalCount <= min(headWindow, tailWindow)
 
         var headText: String?
         if needsCommandClassification {
             // The command grammar only matches at the utterance start, so the
             // decision reads a decode of the head. Once the take outgrows the
             // window the head audio is frozen and this pass is the last word.
-            let head = whole ? samples : Array(samples.prefix(headWindow))
             let result = try? await transcriber.transcribe(
-                samples: head, language: language, glossary: glossary)
+                samples: audio.head, language: language, glossary: glossary)
             // Drop results that land after the key was released — the decision
             // froze at key-up and must not move.
             guard phase.isRecording else { return false }
             if let text = result?.text, !text.isEmpty {
                 headText = text
                 applyLiveClassification(text)
-                if samples.count >= headWindow { headClassificationDone = true }
+                if audio.totalCount >= headWindow { headClassificationDone = true }
             }
         }
 
@@ -728,9 +750,8 @@ final class AppState {
         // head decode doubles as the preview while the take fits the window.
         let interimText: String?
         if settings.livePreview, !whole || headText == nil {
-            let tail = samples.count > tailWindow ? Array(samples.suffix(tailWindow)) : samples
             let result = try? await transcriber.transcribe(
-                samples: tail, language: language, glossary: glossary)
+                samples: audio.tail, language: language, glossary: glossary)
             guard phase.isRecording else { return false }
             interimText = result?.text
         } else {

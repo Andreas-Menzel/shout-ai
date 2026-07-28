@@ -310,10 +310,29 @@ final class EndpointRewriterTests: XCTestCase {
     }
 
     func testLoopbackClassifiedLocalRemoteNot() {
-        XCTAssertTrue(EndpointConfig(baseURL: URL(string: "http://localhost:11434/v1")!, model: "m").isLoopback)
-        XCTAssertTrue(EndpointConfig(baseURL: URL(string: "http://127.0.0.1:1234/v1")!, model: "m").isLoopback)
-        XCTAssertFalse(EndpointConfig(baseURL: URL(string: "http://192.168.1.9:11434/v1")!, model: "m").isLoopback)
-        XCTAssertFalse(EndpointConfig(baseURL: URL(string: "https://api.example.com/v1")!, model: "m").isLoopback)
+        func loopback(_ url: String) -> Bool {
+            EndpointConfig(baseURL: URL(string: url)!, model: "m").isLoopback
+        }
+        XCTAssertTrue(loopback("http://localhost:11434/v1"))
+        XCTAssertTrue(loopback("http://127.0.0.1:1234/v1"))
+        XCTAssertFalse(loopback("http://192.168.1.9:11434/v1"))
+        XCTAssertFalse(loopback("https://api.example.com/v1"))
+
+        // The whole of 127.0.0.0/8 is this Mac, not just .0.1 — warning that a
+        // transcript "leaves your Mac" would be wrong for any of these.
+        XCTAssertTrue(loopback("http://127.0.0.2:11434/v1"))
+        XCTAssertTrue(loopback("http://127.1.2.3:11434/v1"))
+        XCTAssertTrue(loopback("http://127.255.255.255/v1"))
+        XCTAssertTrue(loopback("http://[::1]:11434/v1"))
+
+        // Near-misses must not be mistaken for loopback: over-warning is the safe
+        // direction, under-warning is a privacy claim we'd be breaking.
+        XCTAssertFalse(loopback("http://128.0.0.1/v1"))
+        XCTAssertFalse(loopback("http://27.0.0.1/v1"))
+        XCTAssertFalse(loopback("http://1270.0.0.1/v1"))
+        XCTAssertFalse(loopback("http://127.0.0.999/v1"))
+        XCTAssertFalse(loopback("http://127.0.0.1.evil.com/v1"))
+        XCTAssertFalse(loopback("https://localhost.evil.com/v1"))
     }
 
     func testInsecureRemoteClassification() {

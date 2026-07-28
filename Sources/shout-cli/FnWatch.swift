@@ -24,17 +24,17 @@ enum FnWatch {
     private static let escapeKeyCode: Int64 = 53
 
     // Raw detection mirror of FnKeyMonitor.
-    static var isFnDown = false
-    static var fnDownAt: CFAbsoluteTime = 0
-    static var startTime: CFAbsoluteTime = 0
-    static var lastEventAt: CFAbsoluteTime = 0
+    private static var isFnDown = false
+    private static var fnDownAt: CFAbsoluteTime = 0
+    private static var startTime: CFAbsoluteTime = 0
+    private static var lastEventAt: CFAbsoluteTime = 0
 
     // Identical config + logic to the app.
     private static let config = FnGestureConfig(holdThreshold: 0.5, doubleTapWindow: 0.6)
     private static let recognizer = FnGestureRecognizer()
     private static var recording: FnRecordingState = .idle
 
-    static var logHandle: FileHandle?
+    private static var logHandle: FileHandle?
 
     static func run(seconds: Double) {
         let logURL = ShoutPaths.appSupportDir.appendingPathComponent("fnwatch.log")

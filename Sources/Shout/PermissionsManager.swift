@@ -71,8 +71,13 @@ final class PermissionsManager {
         _ = CGRequestPostEventAccess()
     }
 
-    func openPrivacyPane(_ anchor: String) {
-        let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?\(anchor)")!
+    /// Private on purpose: the anchor is interpolated into a URL, so callers are
+    /// the three fixed helpers below rather than arbitrary strings.
+    private func openPrivacyPane(_ anchor: String) {
+        guard let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?\(anchor)") else {
+            Log.app.error("Could not build privacy-pane URL for anchor \(anchor, privacy: .public)")
+            return
+        }
         NSWorkspace.shared.open(url)
     }
 

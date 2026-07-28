@@ -297,6 +297,11 @@ public enum VoiceCommand {
     private static func withinEditDistance(_ a: String, _ b: String, limit: Int) -> Bool {
         let x = Array(a.unicodeScalars), y = Array(b.unicodeScalars)
         if abs(x.count - y.count) > limit { return false }
+        // The `1...count` loops below trap on an empty input. Callers today always
+        // pass ≥3 scalars, so this guard is insurance against a future caller
+        // rather than a live bug — an empty word is trivially within `limit` of
+        // another only if that one is short enough.
+        guard !x.isEmpty, !y.isEmpty else { return max(x.count, y.count) <= limit }
         var prev = Array(0...y.count)
         for i in 1...x.count {
             var row = [i] + Array(repeating: 0, count: y.count)

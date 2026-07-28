@@ -71,7 +71,20 @@ func runRewrite(text: String, langCode: String?, profile: Profile = .cleanUp, gl
 
 let arguments = Array(CommandLine.arguments.dropFirst())
 guard let command = arguments.first else {
-    fail("usage: shout-cli status | transcribe <file> [lang] | rewrite <text> [lang] [profile] | rewrite-endpoint <baseURL> <model> <text> [lang] | voice-switch <text> [trigger] | pipeline <file> [lang]")
+    fail("""
+    usage: shout-cli <command>
+
+      status                                            model + Apple Intelligence availability
+      transcribe <file> [auto|de|en]                    whisper only
+      rewrite <text> [lang] [profile] [term1,term2]     cleanup via the on-device model
+      rewrite-endpoint <baseURL> <model> <text> [lang]  via an OpenAI-compatible endpoint
+      pipeline <file> [auto|de|en]                      transcribe + rewrite, with timings
+      voice-switch <transcript> [trigger]               spoken profile-switch parsing
+      diagnose-profile <taskPrompt> <text> [lang]       assembled prompt + raw model output
+      fnwatch [seconds]                                 fn-key event trace
+
+    profile: cleanup | professional | prompt | summarize | translate
+    """)
 }
 
 switch command {

@@ -93,9 +93,24 @@ public struct EndpointConfig: Codable, Equatable, Sendable {
 
     /// True when the host is loopback (this Mac), for the privacy label. A LAN
     /// or public host is treated as leaving the machine.
+    ///
+    /// Covers all of `127.0.0.0/8`, not just `127.0.0.1` — `127.0.0.2` and friends
+    /// are equally local, and a user pointing at one shouldn't be warned that
+    /// their transcript is leaving the Mac. Anything unrecognised falls through to
+    /// `false`, which over-warns rather than under-warns.
     public var isLoopback: Bool {
         guard let host = baseURL.host?.lowercased() else { return false }
-        return host == "localhost" || host == "127.0.0.1" || host == "::1"
+        if host == "localhost" || host == "::1" || host.hasSuffix(".localhost") { return true }
+        // IPv4 loopback: 127.x.y.z with four numeric octets in range.
+        let octets = host.split(separator: ".", omittingEmptySubsequences: false)
+        if octets.count == 4, octets.first == "127",
+           octets.allSatisfy({ !$0.isEmpty && $0.allSatisfy(\.isNumber) }),
+           octets.allSatisfy({ (Int($0) ?? 256) <= 255 }) {
+            return true
+        }
+        // IPv6 loopback in long or mapped form, e.g. ::ffff:127.0.0.1
+        if host == "0:0:0:0:0:0:0:1" { return true }
+        return false
     }
 
     /// True when using this endpoint would send the transcript (and any API key)

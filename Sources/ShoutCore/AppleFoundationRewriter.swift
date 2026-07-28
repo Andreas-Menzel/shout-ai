@@ -39,14 +39,23 @@ public final class AppleFoundationRewriter: RewriteEngine, Sendable {
     /// once instructions and output are counted, else pass through raw.
     public var maxInputCharacters: Int { Tuning.maxRewriteCharacters }
 
-    /// Warms the model with the exact instructions the next rewrite will use, so
-    /// the ~800-token instruction prefill is cached and the first call is fast.
+    /// Asks the system to load the on-device model's resources ahead of the first
+    /// rewrite, so that cost isn't paid mid-dictation. Model residency is
+    /// process-wide and does outlive this call.
+    ///
+    /// What it does *not* buy is a cached instruction prefill: prefill is per
+    /// `LanguageModelSession`, and the session built here is deliberately thrown
+    /// away — see `complete(system:user:)` for why we never reuse one.
     public func prewarm(instructions: String) {
         guard isAvailable else { return }
         let session = LanguageModelSession(model: model, instructions: instructions)
         session.prewarm(promptPrefix: nil)
     }
 
+    /// A fresh session per rewrite, on purpose. `LanguageModelSession` accumulates
+    /// a transcript, so a reused one would carry the previous dictation into the
+    /// next one's context — leaking one dictation's content into another's result.
+    /// Paying the prefill each time is the correct trade for that isolation.
     public func complete(system: String, user: String) async throws -> String {
         guard isAvailable else { throw ShoutError.rewriteUnavailable }
         let session = LanguageModelSession(model: model, instructions: system)

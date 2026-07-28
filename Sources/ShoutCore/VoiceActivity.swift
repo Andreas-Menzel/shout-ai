@@ -18,7 +18,7 @@ import Foundation
 /// Timestamps are injected, keeping the logic pure and testable.
 public struct VoiceActivityTracker: Sendable {
     /// How far above the noise floor a sample must rise to count as speech.
-    public static let speechMargin: Float = 0.03
+    static let speechMargin: Float = 0.03
     /// Floor tracking: fall fast toward new quiet (locking onto silence in
     /// the gaps between words), rise gently so speech energy doesn't drag the
     /// floor — and thus the threshold — up to meet it.

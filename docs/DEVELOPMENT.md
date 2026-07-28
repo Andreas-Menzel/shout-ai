@@ -73,8 +73,13 @@ swift test                                          # unit tests for the ShoutCo
 Covers the pure engine-layer logic: `TextNormalizer` (glossary + fillers), the profile quality
 guards, `WhisperTranscriber.tidy`, `FnGestureRecognizer`, `DictationPipeline` (with fake engines),
 `withTimeout`, `VoiceCommand` + `VoiceSwitchDecision` (spoken profile switching), `EndpointRewriter`
-(SSE assembly, `<think>` stripping, the insecure-HTTP gate), `Profile` (upgrade + glyph fallbacks),
-`MediaPauseCoordinator`, `ChimeSynth`, and `VoiceActivityTracker`.
+(SSE assembly, `<think>` stripping, the insecure-HTTP gate, loopback classification),
+`WhisperModelSpec.validateFile` + `ModelManager` (the exact-size and SHA-256 gates that stand
+between a downloaded blob and native ggml), `AudioRecorder`'s interim window arithmetic, `Profile`
+(upgrade + glyph fallbacks), `MediaPauseCoordinator`, `ChimeSynth`, and `VoiceActivityTracker`.
+
+The suite is hermetic — no network (`EndpointRewriterTests` stubs `URLSession` with a custom
+`URLProtocol`), no speech model, no Apple Intelligence — so it runs anywhere, including CI.
 
 Exercise the engines from the command line without the UI:
 

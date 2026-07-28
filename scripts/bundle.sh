@@ -30,7 +30,25 @@ if [ -z "$SLICE" ]; then
     exit 1
 fi
 cp -R "$SLICE" "$APP/Contents/Frameworks/"
-install_name_tool -add_rpath "@executable_path/../Frameworks" "$APP/Contents/MacOS/Shout" 2>/dev/null || true
+
+FW="$APP/Contents/Frameworks/whisper.framework"
+# The upstream slice is a fat x86_64+arm64 binary; Shout is Apple-Silicon-only
+# (Package.swift, and Apple Intelligence requires it), so the Intel half is dead
+# weight. Thin the real binary inside Versions/A — this is a versioned framework
+# whose top-level entries are symlinks into Versions/Current, and writing through
+# one would replace the symlink and leave codesign with an unrecognisable bundle.
+BIN="$FW/Versions/A/whisper"
+if lipo -archs "$BIN" 2>/dev/null | grep -qw x86_64; then
+    lipo -thin arm64 "$BIN" -output "$BIN.thin"
+    mv "$BIN.thin" "$BIN"
+fi
+
+# Point the executable at the embedded framework. Only add the rpath if it isn't
+# already there — and fail loudly if it can't be added, because the alternative is
+# a dyld load failure at launch with a far worse message.
+if ! otool -l "$APP/Contents/MacOS/Shout" | grep -q "@executable_path/../Frameworks"; then
+    install_name_tool -add_rpath "@executable_path/../Frameworks" "$APP/Contents/MacOS/Shout"
+fi
 
 # Signing identity: explicit CODESIGN_IDENTITY wins, then any stable identity
 # in the keychain (Apple Development / Developer ID / our self-signed one),

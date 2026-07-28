@@ -42,18 +42,6 @@ final class ProfileStore {
 
     func profile(id: String) -> Profile? { profiles.first { $0.id == id } }
 
-    /// Creates a new profile copied from `template` (default Clean-up) and
-    /// returns its id.
-    @discardableResult
-    func addProfile(name: String, basedOn template: Profile = .cleanUp) -> String {
-        let id = "user-" + UUID().uuidString
-        profiles.append(Profile(
-            id: id, name: name, taskPrompt: template.taskPrompt, rawPrompt: template.rawPrompt,
-            modelID: template.modelID, guardrails: template.guardrails, isBuiltIn: false))
-        persist()
-        return id
-    }
-
     /// Duplicates any profile (built-in or user) as a new editable user profile.
     @discardableResult
     func duplicate(id: String) -> String? {
@@ -66,12 +54,6 @@ final class ProfileStore {
         profiles.append(copy)
         persist()
         return newID
-    }
-
-    func update(_ profile: Profile) {
-        guard let idx = profiles.firstIndex(where: { $0.id == profile.id }) else { return }
-        profiles[idx] = profile
-        persist()
     }
 
     /// Inserts a new profile or replaces an existing one with the same id.

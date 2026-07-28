@@ -44,8 +44,12 @@ public final class AudioRecorder {
         // Capture the converter in the tap closure instead of reading a mutable
         // `self.converter`: the audio thread would otherwise race `stop()` nilling
         // it. `removeTap` stops future invocations; captured, it's never nil here.
+        // `onLevel` is captured for the same reason — it's a `var`, and reading it
+        // per callback would be an unsynchronised cross-thread read. Fixing the
+        // sink for the take also means a mid-take reassignment can't half-apply.
+        let levelSink = onLevel
         input.installTap(onBus: 0, bufferSize: 4096, format: inFormat) { [weak self] buffer, _ in
-            self?.process(buffer, converter: converter)
+            self?.process(buffer, converter: converter, levelSink: levelSink)
         }
         engine.prepare()
         try engine.start()
@@ -74,14 +78,52 @@ public final class AudioRecorder {
         _ = stop()
     }
 
-    /// A thread-safe copy of the audio captured so far, without stopping
-    /// capture. Used for live interim transcription while recording continues.
-    public func snapshot() -> [Float] {
-        lock.lock(); defer { lock.unlock() }
-        return samples
+    /// Bounded views of the in-progress take, for live interim transcription.
+    public struct Windows: Sendable {
+        /// Total samples captured so far — the full length, even though only the
+        /// windows below are copied.
+        public let totalCount: Int
+        /// The first `head` samples requested (or all of them, if fewer).
+        public let head: [Float]
+        /// The last `tail` samples requested (or all of them, if fewer).
+        public let tail: [Float]
     }
 
-    private func process(_ buffer: AVAudioPCMBuffer, converter: AVAudioConverter) {
+    /// Copies just the leading and trailing windows an interim pass needs, read
+    /// under a single lock so both describe the same instant. Pass `0` for a
+    /// window you don't need.
+    ///
+    /// Deliberately *not* a whole-buffer snapshot. Handing back `samples` itself
+    /// leaves the array multiply-referenced, so the next `append` on the audio
+    /// render thread has to copy the entire buffer — up to 19 MB at
+    /// `Tuning.maxDictationDuration` — while holding this lock, every 250–600 ms.
+    /// Allocating multi-megabyte copies on a real-time audio thread is how you get
+    /// dropouts on long hands-free takes. The windows are bounded (20 s each), and
+    /// the copies below are freshly allocated, so the recorder's own buffer stays
+    /// uniquely referenced and append never copies.
+    public func windows(head headCount: Int, tail tailCount: Int) -> Windows {
+        lock.lock(); defer { lock.unlock() }
+        let total = samples.count
+        return samples.withUnsafeBufferPointer { buffer in
+            Windows(totalCount: total,
+                    head: Self.copy(buffer, count: min(headCount, total), fromEnd: false),
+                    tail: Self.copy(buffer, count: min(tailCount, total), fromEnd: true))
+        }
+    }
+
+    /// Building an `Array` from an `UnsafeBufferPointer` always allocates, which is
+    /// the point: an `ArraySlice` would keep the source buffer alive and shared.
+    /// Internal rather than private so the window arithmetic can be tested — the
+    /// recorder's own buffer can't be populated without a live microphone.
+    static func copy(_ buffer: UnsafeBufferPointer<Float>,
+                     count: Int, fromEnd: Bool) -> [Float] {
+        guard count > 0 else { return [] }
+        let start = fromEnd ? buffer.count - count : 0
+        return Array(UnsafeBufferPointer(rebasing: buffer[start..<start + count]))
+    }
+
+    private func process(_ buffer: AVAudioPCMBuffer, converter: AVAudioConverter,
+                         levelSink: (@MainActor @Sendable (Float) -> Void)?) {
         let ratio = Self.targetSampleRate / buffer.format.sampleRate
         let capacity = AVAudioFrameCount(Double(buffer.frameLength) * ratio) + 1024
         guard let out = AVAudioPCMBuffer(pcmFormat: converter.outputFormat, frameCapacity: capacity) else { return }
@@ -108,9 +150,9 @@ public final class AudioRecorder {
         for v in chunk { sum += v * v }
         let rms = (sum / Float(max(chunk.count, 1))).squareRoot()
         let level = min(1, rms * Tuning.audioLevelGain)
-        // Deliver on the main actor. Capture the callback (not self) so the
-        // Sendable dispatch closure carries only value/Sendable state.
-        let deliver = onLevel
-        DispatchQueue.main.async { MainActor.assumeIsolated { deliver?(level) } }
+        // Deliver on the main actor. The closure carries only the sink and a
+        // Float, so nothing non-Sendable crosses the hop.
+        guard let levelSink else { return }
+        DispatchQueue.main.async { MainActor.assumeIsolated { levelSink(level) } }
     }
 }

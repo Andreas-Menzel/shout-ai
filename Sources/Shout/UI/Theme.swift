@@ -3,18 +3,19 @@
 
 import SwiftUI
 
-/// The single source of truth for Shout's visual style — colors, typography,
-/// spacing, radii, shadows, and the shared pill surface. Everything visual
-/// routes through here so the surfaces read as one family, state changes don't
-/// "jump", and the look is tunable in one place.
+/// Shout's shared visual vocabulary — colors, typography, spacing, radii,
+/// shadows, and the pill surface. Colors, type, radii and the surface do route
+/// exclusively through here, which is what keeps the surfaces reading as one
+/// family and the look tunable in one place; spacing is a loose convention (see
+/// `Space`).
 enum Theme {
-    /// 4-pt spacing scale.
+    /// Shared spacing steps. Only the values actually in use live here — views
+    /// still hard-code one-off insets where a scale step would be a poor fit, so
+    /// this is a convenience, not a rule the whole UI obeys.
     enum Space {
-        static let xs: CGFloat = 4
         static let s: CGFloat = 8
         static let m: CGFloat = 12
         static let l: CGFloat = 16
-        static let xl: CGFloat = 24
     }
 
     // Brand / status colors.
