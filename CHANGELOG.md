@@ -8,6 +8,8 @@ number is `CFBundleShortVersionString` in `Resources/Info.plist`.
 
 ## [Unreleased]
 
+Release-readiness work ahead of going public. Folded into 1.0.0 if it is tagged from here.
+
 ### Added
 
 - Community health files: `SECURITY.md` (including the intentional non-sandbox posture),
@@ -32,9 +34,9 @@ number is `CFBundleShortVersionString` in `Resources/Info.plist`.
   framework.
 - Built-in prompt and evaluation fixtures use neutral example content.
 
-## [0.1.0] — unreleased
+## [1.0.0] — not yet tagged
 
-Developer preview. Not yet tagged or released.
+First public release. Built from source; no notarized download yet.
 
 - Push-to-talk dictation: hold **fn** to record, release to insert; double-tap to latch
   hands-free; **Esc** cancels at any stage.

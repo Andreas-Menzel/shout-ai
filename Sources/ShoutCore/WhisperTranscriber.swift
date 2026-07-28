@@ -10,7 +10,7 @@ import whisper
 public final class WhisperTranscriber: TranscriptionEngine, @unchecked Sendable {
     private let modelURL: URL
     private var ctx: OpaquePointer?
-    private let queue = DispatchQueue(label: "com.shoutai.whisper", qos: .userInitiated)
+    private let queue = DispatchQueue(label: "de.menzelini.shout.whisper", qos: .userInitiated)
 
     /// Load-state readable without touching `queue` — reading it must never block
     /// the caller (the main actor asks this on the hot path). A `queue.sync`

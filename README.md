@@ -9,8 +9,8 @@ stays on it too unless you deliberately connect a remote cleanup model.**
 
 Dictation supports German and English; the interface is English.
 
-> **Status:** developer build. Shout is currently built from source (there is no notarized
-> download yet), so setup assumes Xcode and the command line.
+> **Status:** built from source. There is no notarized download yet, so setup assumes Xcode and
+> the command line.
 
 ## What it does
 
@@ -183,11 +183,11 @@ make clean                     # removes .build and build/
 rm -rf "$HOME/Library/Application Support/Shout"
 
 # 4. Delete preferences
-defaults delete com.shoutai.Shout 2>/dev/null || true
+defaults delete de.menzelini.shout 2>/dev/null || true
 
 # 5. Delete any stored endpoint API keys (repeat until it reports no item found;
 #    or search for "Shout" in Keychain Access and delete the entries there)
-security delete-generic-password -s "com.shoutai.Shout.endpoint-key" 2>/dev/null || true
+security delete-generic-password -s "de.menzelini.shout.endpoint-key" 2>/dev/null || true
 
 # 6. Reset the privacy permissions granted to Shout
 make reset-permissions         # Accessibility, Input Monitoring, Post Events,
@@ -217,8 +217,8 @@ the on-device Apple Intelligence model remains the default. It writes four thing
 
 - Speech model: `~/Library/Application Support/Shout/models/ggml-large-v3-turbo.bin`
 - Dictation history: `~/Library/Application Support/Shout/history.json` (optional — see Settings)
-- Preferences: the `com.shoutai.Shout` domain
-- Endpoint API keys: your login Keychain, service `com.shoutai.Shout.endpoint-key` — only if you
+- Preferences: the `de.menzelini.shout` domain
+- Endpoint API keys: your login Keychain, service `de.menzelini.shout.endpoint-key` — only if you
   add an endpoint that needs one. Keys are never written to the preferences file.
 
 ## Contributing / developing
@@ -228,7 +228,9 @@ debugging tools live in [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md).
 
 ## Version & license
 
-Shout is at **v0.1.0** (developer preview).
+Shout is at **v1.0.0**. It is built from source — there is no notarized download yet, so you
+compile it yourself (see [Install](#install)). Changes are recorded in
+[CHANGELOG.md](CHANGELOG.md).
 
 It is free software under the **GNU General Public License v3.0-or-later** — see
 [LICENSE](LICENSE). You may use, study, share, and modify it; derivative works must stay under

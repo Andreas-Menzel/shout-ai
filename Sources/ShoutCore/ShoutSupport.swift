@@ -5,11 +5,11 @@ import Foundation
 import os
 
 public enum Log {
-    public static let app = Logger(subsystem: "com.shoutai.Shout", category: "app")
-    public static let audio = Logger(subsystem: "com.shoutai.Shout", category: "audio")
-    public static let whisper = Logger(subsystem: "com.shoutai.Shout", category: "whisper")
-    public static let rewrite = Logger(subsystem: "com.shoutai.Shout", category: "rewrite")
-    public static let model = Logger(subsystem: "com.shoutai.Shout", category: "model")
+    public static let app = Logger(subsystem: "de.menzelini.shout", category: "app")
+    public static let audio = Logger(subsystem: "de.menzelini.shout", category: "audio")
+    public static let whisper = Logger(subsystem: "de.menzelini.shout", category: "whisper")
+    public static let rewrite = Logger(subsystem: "de.menzelini.shout", category: "rewrite")
+    public static let model = Logger(subsystem: "de.menzelini.shout", category: "model")
 }
 
 public enum ShoutPaths {

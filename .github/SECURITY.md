@@ -27,7 +27,7 @@ Shout is a local-first dictation app, so its interesting surface is the local on
 - **Text insertion into the wrong target** — `TextInserter` checks the focused element and
   restores the clipboard; defeating either is in scope.
 - **Keychain handling** — endpoint API keys live in the login Keychain under service
-  `com.shoutai.Shout.endpoint-key`, device-bound. Any way to read them from another process, or
+  `de.menzelini.shout.endpoint-key`, device-bound. Any way to read them from another process, or
   to get one written somewhere else (preferences, logs, history), is in scope.
 - **The model download** — `Package.swift` pins the whisper.cpp framework by SHA-256 and
   `WhisperModelSpec` pins the speech model. A way to get an unverified binary loaded is in scope.

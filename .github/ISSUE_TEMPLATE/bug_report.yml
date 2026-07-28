@@ -83,6 +83,6 @@ body:
     attributes:
       label: Relevant log output
       description: |
-        `log stream --predicate 'subsystem == "com.shoutai.Shout"'` — reproduce while it runs.
+        `log stream --predicate 'subsystem == "de.menzelini.shout"'` — reproduce while it runs.
         Transcript text is marked private and will show as `<private>`; keep it that way.
       render: text

@@ -151,7 +151,7 @@ visibly changed.
 
 ## Debugging
 
-- **Logs:** `log stream --predicate 'subsystem == "com.shoutai.Shout"'` (categories: `app`,
+- **Logs:** `log stream --predicate 'subsystem == "de.menzelini.shout"'` (categories: `app`,
   `audio`, `whisper`, `rewrite`, `model`).
 - **fn key:** `.build/release/shout-cli fnwatch [seconds]` creates the same listen-only tap the app
   uses and logs every fn/key event plus the gesture intents the shared `FnGestureRecognizer` emits,

@@ -9,7 +9,7 @@ import Security
 /// never land in UserDefaults. Operations are best-effort and never throw: a
 /// miss simply means "no key".
 enum KeychainStore {
-    private static let service = "com.shoutai.Shout.endpoint-key"
+    private static let service = "de.menzelini.shout.endpoint-key"
 
     static func get(account: String) -> String? {
         let query: [String: Any] = [

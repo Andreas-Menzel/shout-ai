@@ -62,11 +62,11 @@ cert:
 # Clear Shout's stale privacy entries after a signature change, then
 # re-grant them fresh in the app's Setup window.
 reset-permissions:
-	-tccutil reset Accessibility com.shoutai.Shout
-	-tccutil reset ListenEvent com.shoutai.Shout
-	-tccutil reset PostEvent com.shoutai.Shout
-	-tccutil reset Microphone com.shoutai.Shout
-	-tccutil reset AppleEvents com.shoutai.Shout
+	-tccutil reset Accessibility de.menzelini.shout
+	-tccutil reset ListenEvent de.menzelini.shout
+	-tccutil reset PostEvent de.menzelini.shout
+	-tccutil reset Microphone de.menzelini.shout
+	-tccutil reset AppleEvents de.menzelini.shout
 
 clean:
 	rm -rf .build build
