@@ -193,7 +193,7 @@ struct EndpointEditorView: View {
                     if hasStoredKey {
                         Toggle("Remove stored key", isOn: $clearKey)
                     }
-                    Text("Optional. Local servers like Ollama usually need none. Stored in your Keychain, never in plain settings.")
+                    Text("Optional. Local servers like Ollama usually need none. Stored in your login keychain, never in plain settings.")
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 } header: {

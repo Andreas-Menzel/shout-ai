@@ -26,9 +26,10 @@ Shout is a local-first dictation app, so its interesting surface is the local on
   *without* the user selecting a remote model would be a serious bug.
 - **Text insertion into the wrong target** — `TextInserter` checks the focused element and
   restores the clipboard; defeating either is in scope.
-- **Keychain handling** — endpoint API keys live in the login Keychain under service
-  `de.menzelini.shout.endpoint-key`, device-bound. Any way to read them from another process, or
-  to get one written somewhere else (preferences, logs, history), is in scope.
+- **Keychain handling** — endpoint API keys live in the login keychain under service
+  `de.menzelini.shout.endpoint-key`, never marked synchronizable, so they stay on the machine.
+  Any way to read them from another process, or to get one written somewhere else (preferences,
+  logs, history), is in scope.
 - **The model download** — `Package.swift` pins the whisper.cpp framework by SHA-256 and
   `WhisperModelSpec` pins the speech model. A way to get an unverified binary loaded is in scope.
 - **History and logs** — dictation history is local and optional. Content leaking into

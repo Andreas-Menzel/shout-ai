@@ -155,6 +155,10 @@ History window. History is never uploaded.
 - **Permissions look enabled but nothing happens after a rebuild.** An ad-hoc signature made the
   entries stale. Run `make reset-permissions`, then re-grant them in Setup — or run `make cert`
   once so this stops happening.
+- **macOS asks for keychain permission when a saved endpoint key is used.** Keychain items are
+  tied to the signature of the app that created them, and an ad-hoc signature changes on every
+  build. Click *Always Allow*, or run `make cert` once — a stable identity keeps the item
+  associated with the app across rebuilds.
 - **"Downloading speech model…" or "not installed".** Open Setup and let the model finish
   downloading (or retry). An incomplete download is detected by its exact byte size and never
   loaded, and every completed download is checked against a pinned SHA-256 before use — so a
@@ -185,9 +189,10 @@ rm -rf "$HOME/Library/Application Support/Shout"
 # 4. Delete preferences
 defaults delete de.menzelini.shout 2>/dev/null || true
 
-# 5. Delete any stored endpoint API keys (repeat until it reports no item found;
-#    or search for "Shout" in Keychain Access and delete the entries there)
-security delete-generic-password -s "de.menzelini.shout.endpoint-key" 2>/dev/null || true
+# 5. Delete any stored endpoint API keys (one keychain item per endpoint you
+#    added, so this loops until none are left; you can also search for "Shout"
+#    in Keychain Access and delete the entries there)
+while security delete-generic-password -s "de.menzelini.shout.endpoint-key" >/dev/null 2>&1; do :; done
 
 # 6. Reset the privacy permissions granted to Shout
 make reset-permissions         # Accessibility, Input Monitoring, Post Events,
@@ -218,8 +223,9 @@ the on-device Apple Intelligence model remains the default. It writes four thing
 - Speech model: `~/Library/Application Support/Shout/models/ggml-large-v3-turbo.bin`
 - Dictation history: `~/Library/Application Support/Shout/history.json` (optional — see Settings)
 - Preferences: the `de.menzelini.shout` domain
-- Endpoint API keys: your login Keychain, service `de.menzelini.shout.endpoint-key` — only if you
-  add an endpoint that needs one. Keys are never written to the preferences file.
+- Endpoint API keys: your login keychain, service `de.menzelini.shout.endpoint-key`, listed as
+  *Shout — endpoint API key* in Keychain Access — only if you add an endpoint that needs one. Keys
+  are never written to the preferences file and are never marked for iCloud sync.
 
 ## Contributing / developing
 

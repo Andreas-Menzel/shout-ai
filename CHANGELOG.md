@@ -50,6 +50,15 @@ Release-readiness work ahead of going public. Folded into 1.0.0 if it is tagged 
   dictations. It does not — prefill is per session, and each rewrite deliberately gets a fresh
   session so one dictation cannot leak into the next one's context.
 
+### Fixed
+
+- **Endpoint API keys are stored again.** They were written to the data-protection keychain, which
+  requires an `application-identifier` entitlement only a real Team ID can carry — so with Shout's
+  self-signed and ad-hoc signing every `SecItemAdd` failed with `errSecMissingEntitlement`
+  (-34018), the failure was discarded, and the key silently disappeared while the UI still claimed
+  it had been saved. Keys now go to the file-based login keychain, which also makes them visible in
+  Keychain Access and removable with the documented `security delete-generic-password` step.
+
 ### Removed
 
 - Dead code: `ProfileStore.addProfile` and `ProfileStore.update` (superseded by `duplicate` and
