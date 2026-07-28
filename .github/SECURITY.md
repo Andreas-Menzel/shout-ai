@@ -39,14 +39,16 @@ Shout is a local-first dictation app, so its interesting surface is the local on
 ## Out of scope — intentional design decisions
 
 These are documented choices, not oversights. Reporting them is fine, but they will be closed
-as intended behaviour:
+as intended behavior:
 
 - **The app is not sandboxed.** It cannot be: it installs a global `CGEventTap` to watch the fn
   key, synthesizes ⌘V into other applications, and drives Spotify/Music over Apple Events. All
   three are incompatible with the App Sandbox. See `Resources/Shout.entitlements`.
 - **`com.apple.security.cs.disable-library-validation`** is set so the hardened runtime will load
-  the embedded `whisper.framework`, which is signed by its upstream publisher rather than by this
-  project.
+  the embedded `whisper.framework`. Library Validation requires the framework to be signed by the
+  same Team ID as the app, and the self-signed identity `make cert` creates carries no Team ID for
+  it to match — so dyld would refuse to load Shout's own framework. `scripts/bundle.sh` signs the
+  framework with the same identity as the app. See `Resources/Shout.entitlements`.
 - **A global event tap sees key events while running.** That is the feature. The tap is
   `listenOnly` and Shout acts on fn and Esc only.
 - **Synthesizing keystrokes requires Accessibility**, and watching the fn key requires Input

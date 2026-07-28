@@ -96,21 +96,23 @@ public struct EndpointConfig: Codable, Equatable, Sendable {
     ///
     /// Covers all of `127.0.0.0/8`, not just `127.0.0.1` — `127.0.0.2` and friends
     /// are equally local, and a user pointing at one shouldn't be warned that
-    /// their transcript is leaving the Mac. Anything unrecognised falls through to
-    /// `false`, which over-warns rather than under-warns.
+    /// their transcript is leaving the Mac — plus `localhost`, `*.localhost`, and
+    /// IPv6 loopback written short, long, or IPv4-mapped. Anything unrecognized
+    /// falls through to `false`, which over-warns rather than under-warns.
     public var isLoopback: Bool {
         guard let host = baseURL.host?.lowercased() else { return false }
-        if host == "localhost" || host == "::1" || host.hasSuffix(".localhost") { return true }
-        // IPv4 loopback: 127.x.y.z with four numeric octets in range.
-        let octets = host.split(separator: ".", omittingEmptySubsequences: false)
-        if octets.count == 4, octets.first == "127",
-           octets.allSatisfy({ !$0.isEmpty && $0.allSatisfy(\.isNumber) }),
-           octets.allSatisfy({ (Int($0) ?? 256) <= 255 }) {
-            return true
-        }
-        // IPv6 loopback in long or mapped form, e.g. ::ffff:127.0.0.1
-        if host == "0:0:0:0:0:0:0:1" { return true }
-        return false
+        if host == "localhost" || host.hasSuffix(".localhost") { return true }
+        // IPv6 loopback: `::1` is what Foundation hands back for `http://[::1]:…`,
+        // plus the fully written-out form.
+        if host == "::1" || host == "0:0:0:0:0:0:0:1" { return true }
+        // IPv4 loopback: 127.x.y.z with four numeric octets in range — including
+        // when written as an IPv4-mapped IPv6 address, `::ffff:127.0.0.1`.
+        let mappedPrefix = "::ffff:"
+        let v4 = host.hasPrefix(mappedPrefix) ? String(host.dropFirst(mappedPrefix.count)) : host
+        let octets = v4.split(separator: ".", omittingEmptySubsequences: false)
+        return octets.count == 4 && octets.first == "127"
+            && octets.allSatisfy { !$0.isEmpty && $0.allSatisfy(\.isNumber) }
+            && octets.allSatisfy { (Int($0) ?? 256) <= 255 }
     }
 
     /// True when using this endpoint would send the transcript (and any API key)

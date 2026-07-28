@@ -48,16 +48,20 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ```
 
-The prebuilt framework additionally contains MIT-licensed contributions that
-carry their own in-file notices, and therefore travel with any binary copy:
+The prebuilt framework additionally contains an MIT-licensed contribution that
+carries its own in-file notice, and therefore travels with any binary copy:
 
-- Copyright (c) 2024 Mozilla Foundation — the llamafile `sgemm` matrix-multiply
-  path.
 - Copyright (c) 2023 Jeffrey Quesnelle and Bowen Peng — the YaRN RoPE scaling
   implementation in ggml.
 
-Both notices appear in the corresponding upstream sources at whisper.cpp tag
-`v1.9.1`.
+That notice appears in the corresponding upstream source at whisper.cpp tag
+`v1.9.1`, and is embedded in the framework binary Shout ships.
+
+ggml's optional llamafile `sgemm` path (Copyright (c) 2024 Mozilla Foundation)
+is *not* part of that binary: upstream's `build-xcframework.sh` leaves
+`GGML_LLAMAFILE` off, so the official xcframework contains no `tinyBLAS` or
+`llamafile_sgemm` code and no Mozilla notice. It is listed here only to record
+that the omission was checked rather than assumed.
 
 ---
 

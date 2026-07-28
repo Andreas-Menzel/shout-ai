@@ -54,9 +54,9 @@ make cert             # recommended, one-time: a stable signing identity (see no
 make run              # builds build/Shout.app and opens it
 ```
 
-The whisper.cpp framework (~184 MB) is fetched and checksum-verified by SwiftPM itself, so
-`swift build` and `swift test` work straight from a fresh clone — `make setup` only downloads
-the speech model you need in order to dictate.
+The whisper.cpp framework is fetched and checksum-verified by SwiftPM itself — a 50 MB download
+that unpacks to ~184 MB under `.build/` — so `swift build` and `swift test` work straight from a
+fresh clone. `make setup` only downloads the speech model you need in order to dictate.
 
 `make run` builds the app into `build/Shout.app` and launches it. Because there is no signed
 release yet, you build it yourself.
@@ -135,14 +135,16 @@ and whether the switch sticks for later dictations are all configurable.
 
 **Settings** (from the menu bar):
 
-- *General* — launch at login, show/style the pill (Classic capsule or Dynamic Island notch),
-  live transcript preview, and **Save dictation history**.
-- *Dictation* — spoken language (auto / German / English), the fn hold threshold and double-tap
-  window, the cleanup toggle with its minimum-word count, the active profile and its model
-  (*Manage profiles…* / *Manage endpoints…*), restore clipboard after inserting, pause media
-  while dictating, and voice profile switching.
+- *General* — launch at login, the pill style (Classic capsule or Dynamic Island notch), live
+  transcript preview, whether the active profile shows in the menu bar, and **Save dictation
+  history**.
+- *Dictation* — spoken language (auto / German / English), the cleanup toggle with its
+  minimum-word count, the active profile and its model (*Manage profiles…* /
+  *Manage endpoints…*), restore clipboard after inserting, pause media while dictating, and voice
+  profile switching.
 - *Glossary* — names and jargon Shout should spell exactly (e.g. product or people names).
-- *Setup* — the permission checklist, available any time.
+- *Setup* — the permission checklist, available any time, plus *Fine-tune timing* for the fn hold
+  threshold and the double-tap window.
 
 **History** — every dictation (raw + cleaned) is kept locally so you can review, search, copy,
 or delete it. Turn it off with *General ▸ Save dictation history*, or clear it all from the

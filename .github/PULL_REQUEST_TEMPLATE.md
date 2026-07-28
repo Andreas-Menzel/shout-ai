@@ -8,8 +8,8 @@
 
 - [ ] `swift test` passes (works from a fresh clone — no setup step needed)
 - [ ] `swift build` and `swift build -c release` are clean, with no new warnings
-- [ ] Tests added or updated for any behaviour change
-- [ ] Docs updated if behaviour, setup, or privacy characteristics changed
+- [ ] Tests added or updated for any behavior change
+- [ ] Docs updated if behavior, setup, or privacy characteristics changed
 - [ ] If a built-in rewrite prompt changed: ran the prompt-eval workflow
       (`docs/DEVELOPMENT.md` ▸ *Prompt evaluation*) and appended the outgoing text to
       `previousBuiltInTaskPrompts`

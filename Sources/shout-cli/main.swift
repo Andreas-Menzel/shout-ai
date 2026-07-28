@@ -4,12 +4,11 @@
 import Foundation
 import ShoutCore
 
-// Headless test harness for the Shout pipeline.
+// Headless test harness for the Shout pipeline. Run it with no arguments for
+// the full usage text, including each command's optional arguments:
 //
-//   shout-cli status
-//   shout-cli transcribe <audio-file> [auto|de|en]
-//   shout-cli rewrite "<text>" [de|en]
-//   shout-cli pipeline <audio-file> [auto|de|en]
+//   status · transcribe · rewrite · rewrite-endpoint · pipeline · voice-switch
+//   diagnose-profile · fnwatch
 
 func fail(_ message: String) -> Never {
     FileHandle.standardError.write(Data((message + "\n").utf8))

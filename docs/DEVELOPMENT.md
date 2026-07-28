@@ -43,7 +43,7 @@ make cli              # build just the shout-cli test harness
 make bundle           # assemble a signed build/Shout.app
 make run              # bundle + open
 make cert             # one-time: stable self-signed signing identity (permissions survive rebuilds)
-make reset-permissions# clear stale TCC entries after a signature change
+make reset-permissions # clear stale TCC entries after a signature change
 make clean            # rm -rf .build build
 ```
 
@@ -129,7 +129,7 @@ Two rules when you change a built-in's task prompt:
    Skip this and users keep the old prompt forever. `ProfileTests` enforces that no history entry
    equals a current prompt.
 2. **Re-run the panel.** The prompts carry few-shot examples; a small wording change can shift
-   behaviour on the self-correction cases in particular.
+   behavior on the self-correction cases in particular.
 
 Known model limit (Apple Foundation Models, ≈3B): clause-level self-corrections such as "Dann
 kannst du, nee warte, ich …" may keep the abandoned fragment. That errs toward preserving what

@@ -32,6 +32,15 @@ Release-readiness work ahead of going public. Folded into 1.0.0 if it is tagged 
   media auto-pause is documented; the third-party notices no longer claim that no SF Symbols are
   redistributed as image files, and now state the corresponding source for the embedded
   framework.
+- Further claim corrections, each checked against the code or the shipped binary: the notices no
+  longer attribute llamafile's `sgemm` to the framework (upstream builds the xcframework with
+  `GGML_LLAMAFILE` off, so no `tinyBLAS` code or Mozilla notice is in it); `SECURITY.md` no longer
+  says the embedded framework is signed upstream, since `bundle.sh` signs it with the app's own
+  identity and the real reason for disabling Library Validation is the self-signed identity's
+  missing Team ID; the README lists the fn timing sliders under *Setup*, where they are, rather
+  than *Dictation*, describes *General* as a pill **style** picker (there is no show/hide toggle)
+  and mentions the menu-bar profile toggle it had omitted; and the framework download is described
+  as the 50 MB archive it is rather than its 184 MB unpacked size.
 - Built-in prompt and evaluation fixtures use neutral example content.
 - The documentation screenshot renderer (and the `AppState` hooks it drives) is now `#if DEBUG`,
   so ~370 lines of docs tooling and a check on the hot path of every state change no longer ship
@@ -41,8 +50,9 @@ Release-readiness work ahead of going public. Folded into 1.0.0 if it is tagged 
   so the next append on the audio render thread copied everything — up to 19 MB at the maximum
   dictation length, every 250–600 ms. That was a plausible cause of audio glitches on long
   hands-free takes.
-- Loopback detection now covers all of `127.0.0.0/8` and `.localhost`, so a local endpoint on
-  `127.0.0.2` is no longer labelled as leaving your Mac.
+- Loopback detection now covers all of `127.0.0.0/8`, `.localhost`, and IPv6 loopback written
+  short, long, or IPv4-mapped (`::ffff:127.0.0.1`), so a local endpoint on `127.0.0.2` is no
+  longer labeled as leaving your Mac.
 - The embedded `whisper.framework` is thinned to arm64 when bundling: 5.5 MB → 2.7 MB, for a
   6.4 MB app. `bundle.sh` also no longer swallows an `install_name_tool` failure, which would
   have surfaced later as a dyld load error.

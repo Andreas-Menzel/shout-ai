@@ -324,6 +324,8 @@ final class EndpointRewriterTests: XCTestCase {
         XCTAssertTrue(loopback("http://127.1.2.3:11434/v1"))
         XCTAssertTrue(loopback("http://127.255.255.255/v1"))
         XCTAssertTrue(loopback("http://[::1]:11434/v1"))
+        XCTAssertTrue(loopback("http://[0:0:0:0:0:0:0:1]:11434/v1"))
+        XCTAssertTrue(loopback("http://[::ffff:127.0.0.1]:11434/v1"))
 
         // Near-misses must not be mistaken for loopback: over-warning is the safe
         // direction, under-warning is a privacy claim we'd be breaking.
@@ -333,6 +335,7 @@ final class EndpointRewriterTests: XCTestCase {
         XCTAssertFalse(loopback("http://127.0.0.999/v1"))
         XCTAssertFalse(loopback("http://127.0.0.1.evil.com/v1"))
         XCTAssertFalse(loopback("https://localhost.evil.com/v1"))
+        XCTAssertFalse(loopback("http://[::ffff:8.8.8.8]:11434/v1"))
     }
 
     func testInsecureRemoteClassification() {
