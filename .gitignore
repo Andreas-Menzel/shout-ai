@@ -1,6 +1,9 @@
 # ---- Build output ----
 /.build/
 /build/
+# Release archives from scripts/package-release.sh — they belong on the
+# release page, not in the history.
+/dist/
 
 # The whisper.cpp framework (~184 MB) is fetched and checksum-verified by
 # SwiftPM from the binaryTarget in Package.swift, into .build/artifacts/.

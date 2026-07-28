@@ -8,6 +8,21 @@ number is `CFBundleShortVersionString` in `Resources/Info.plist`.
 
 ## [Unreleased]
 
+### Added
+
+- **Downloadable builds.** `make dist` (`scripts/package-release.sh`) packages the signed app into
+  `dist/Shout-v<version>-arm64.zip` with a `shasum -c`-verifiable checksum, for attaching to a
+  release. It archives with `ditto` because the embedded `whisper.framework` is a versioned bundle
+  whose top-level entries are symlinks — `zip(1)` would store them as copies and invalidate the
+  signature — and it proves that worked by extracting the archive again and re-verifying the
+  signature before printing an upload command. It refuses to package an ad-hoc-signed app unless
+  told to, since macOS ties privacy grants to the signature and each release would otherwise reset
+  everyone's permissions.
+- The README documents installing from a release, including why a non-notarized build must have its
+  quarantine flag cleared and what a user takes on by doing that, with building from source offered
+  as the alternative. The requirements list now separates what a download needs from what compiling
+  needs.
+
 ## [1.0.0] — 2026-07-28
 
 First public release. Built from source; no notarized download yet.

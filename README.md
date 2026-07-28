@@ -43,14 +43,49 @@ The later stages read the same way — the cleanup pass running, then the text h
 ## Requirements
 
 - **macOS 26 or later**, on **Apple Silicon**
-- **Xcode 26 or later** — the full Xcode, not just the Command Line Tools. Shout uses the
-  `FoundationModels` framework, so the macOS 26 SDK is required to compile at all. Point
-  `xcode-select -p` at it.
-- **~2.5 GB free disk** — the speech model (~1.6 GB), the whisper framework (~184 MB), and build
-  output
+- **Xcode 26 or later** — *only to build from source*, and it must be the full Xcode, not just the
+  Command Line Tools: Shout uses the `FoundationModels` framework, so the macOS 26 SDK is required
+  to compile at all. Point `xcode-select -p` at it. A downloaded build needs no toolchain.
+- **Free disk** — about **1.7 GB** for a downloaded build (the ~1.6 GB speech model plus the app),
+  or **~2.5 GB** to build from source, which adds the whisper framework and build output
 - **Apple Intelligence** enabled — *optional*, only for the cleanup pass; transcription works without it
 
 ## Install
+
+Either download a build or compile it yourself. Both give you the same app; the download saves you
+a toolchain, the source build saves you from trusting a binary.
+
+### Download a build
+
+Grab `Shout-v1.0.0-arm64.zip` from the [latest release](https://github.com/Andreas-Menzel/shout-ai/releases/latest),
+unzip it, and move **Shout.app** to `/Applications`. Then, in Terminal:
+
+```sh
+# Optional but recommended: check the download matches the published checksum.
+# Put Shout-v1.0.0-arm64.zip.sha256 next to the zip and run:
+shasum -a 256 -c Shout-v1.0.0-arm64.zip.sha256
+
+# Required once: clear the quarantine flag macOS puts on anything downloaded.
+xattr -d com.apple.quarantine /Applications/Shout.app
+```
+
+**Why that last step is needed, and what you are accepting.** The app is signed, but with the
+project's own certificate rather than an Apple-issued Developer ID, so it is not *notarized* —
+notarization requires a paid Apple Developer account. macOS therefore refuses to launch it until
+the quarantine flag is gone (`spctl` reports `rejected`, `origin=Shout Dev Signing`). Clearing that
+flag means you, not Apple, are vouching for this binary — and Shout is an app that watches the fn
+key globally and can synthesize keystrokes into other apps, so that is not a trivial thing to
+vouch for. If you would rather not, **build from source instead**: it is one command more, and you
+compile what you can read. If you prefer clicking to typing, launching it once and then choosing
+*Open Anyway* in System Settings ▸ Privacy & Security does the same thing.
+
+On first launch Shout opens its Setup window to walk you through the permissions and to download
+the ~1.6 GB speech model. Nothing else is needed — the download is verified against a pinned
+SHA-256.
+
+Requires **Apple Silicon** and **macOS 26+**; the build is arm64-only.
+
+### Build from source
 
 ```sh
 git clone https://github.com/Andreas-Menzel/shout-ai.git shout-ai
@@ -164,6 +199,10 @@ History window. History is never uploaded.
 
 ## Troubleshooting
 
+- **"Apple could not verify Shout is free of malware", or it won't open at all.** That is the
+  quarantine flag on a downloaded, non-notarized build. Run
+  `xattr -d com.apple.quarantine /Applications/Shout.app`, or use *Open Anyway* in System
+  Settings ▸ Privacy & Security — see [Install](#install) for what that means.
 - **The fn key only works inside Shout.** Input Monitoring isn't fully granted. Open Setup,
   grant it, and use **Restart Shout** — a running process can't pick up this permission live.
 - **Permissions look enabled but nothing happens after a rebuild.** An ad-hoc signature made the
@@ -248,9 +287,9 @@ debugging tools live in [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md).
 
 ## Version & license
 
-Shout is at **v1.0.0**. It is built from source — there is no notarized download yet, so you
-compile it yourself (see [Install](#install)). Changes are recorded in
-[CHANGELOG.md](CHANGELOG.md).
+Shout is at **v1.0.0**. Releases ship a signed — but not notarized — build you can download, or
+you can compile it yourself; see [Install](#install) for both, and for what clearing the quarantine
+flag means. Changes are recorded in [CHANGELOG.md](CHANGELOG.md).
 
 It is free software under the **GNU General Public License v3.0-or-later** — see
 [LICENSE](LICENSE). You may use, study, share, and modify it; derivative works must stay under

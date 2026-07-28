@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 # Copyright (C) 2026 Andreas Menzel
-.PHONY: help setup build test bundle run cli cert screenshots recordings bump reset-permissions clean
+.PHONY: help setup build test bundle run cli cert screenshots recordings bump dist reset-permissions clean
 
 # Default to help, so a bare `make` never kicks off a 1.6 GB download.
 .DEFAULT_GOAL := help
@@ -18,6 +18,7 @@ help:
 	@echo "  screenshots        re-render docs/screenshots (off-screen, no display needed)"
 	@echo "  recordings         re-render docs/recordings (needs ffmpeg)"
 	@echo "  bump               cut a release: make bump VERSION=1.0.1 (commits + tags)"
+	@echo "  dist               package build/Shout.app into dist/ for a release upload"
 	@echo "  reset-permissions  clear stale TCC entries after a signature change"
 	@echo "  clean              rm -rf .build build"
 	@echo ""
@@ -69,6 +70,12 @@ bump:
 		echo "       DRY_RUN=1 make bump VERSION=1.0.1   # preview only"; \
 		exit 1; }
 	scripts/bump-version.sh "$(VERSION)"
+
+# Package the signed app for a GitHub release: builds, verifies, archives with
+# ditto (which keeps the framework's symlinks), then re-verifies the signature
+# by extracting the archive again. Version comes from Info.plist.
+dist:
+	scripts/package-release.sh
 
 # Clear Shout's stale privacy entries after a signature change, then
 # re-grant them fresh in the app's Setup window.
