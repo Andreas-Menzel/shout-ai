@@ -7,6 +7,15 @@
 	     the App Sandbox permits. These entitlements only relax the hardened
 	     runtime's default restrictions to the minimum Shout actually uses. -->
 
+	<!-- The hardened runtime gates the microphone behind this entitlement: without
+	     it tccd refuses to even show the consent prompt ("Prompting policy for
+	     hardened runtime; service: kTCCServiceMicrophone requires entitlement
+	     com.apple.security.device.audio-input but it is missing"), so
+	     AVCaptureDevice.requestAccess returns denied, no dialog appears, and the
+	     app never shows up under Privacy & Security › Microphone. -->
+	<key>com.apple.security.device.audio-input</key>
+	<true/>
+
 	<!-- Under the hardened runtime, sending Apple events to other apps (pausing
 	     Spotify / Apple Music around a dictation) is blocked unless this is set.
 	     Recipients are still subject to the normal TCC Automation consent. -->

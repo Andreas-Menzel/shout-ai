@@ -8,6 +8,16 @@ number is `CFBundleShortVersionString` in `Resources/Info.plist`.
 
 ## [Unreleased]
 
+### Fixed
+
+- **Microphone permission could never be granted.** The app is signed with the hardened runtime,
+  which gates the microphone behind the `com.apple.security.device.audio-input` entitlement — and
+  it was missing. `tccd` refused to even show the consent dialog ("Prompting policy for hardened
+  runtime … requires entitlement … but it is missing"), so **Grant** appeared to do nothing and
+  Shout never showed up under Privacy & Security › Microphone, leaving dictation unusable. The
+  entitlement is now part of `Resources/Shout.entitlements`. After updating, grant the permission
+  in the Setup window; `make reset-permissions` is not needed.
+
 ### Added
 
 - **Downloadable builds.** `make dist` (`scripts/package-release.sh`) packages the signed app into
